@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter/gestures.dart';
 
 class AppFooter extends StatelessWidget {
   const AppFooter({Key? key}) : super(key: key);
@@ -10,29 +10,37 @@ class AppFooter extends StatelessWidget {
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
-        child: Wrap(
-          alignment: WrapAlignment.center,
-          crossAxisAlignment: WrapCrossAlignment.center,
-        children: [
-          const Text('Desenvolvido por ', style: TextStyle(color: Colors.grey, fontSize: 12)),
-          InkWell(
-            onTap: () async {
-              final url = Uri.parse('https://www.multiti.com.br');
-              if (await canLaunchUrl(url)) {
-                await launchUrl(url);
-              }
-            },
-            child: const Text(
-              'Multiti Consultoria & Solucoes em Tecnologia',
-              style: TextStyle(
-                color: Colors.blueAccent,
-                fontSize: 12,
-                decoration: TextDecoration.underline,
+        child: RichText(
+          textAlign: TextAlign.center,
+          text: TextSpan(
+            style: const TextStyle(color: Colors.grey, fontSize: 12),
+            children: [
+              const TextSpan(text: 'Desenvolvido por '),
+              TextSpan(
+                text: 'Multiti Consultoria & Solucoes em Tecnologia',
+                style: const TextStyle(
+                  color: Colors.blueAccent,
+                  decoration: TextDecoration.underline,
+                ),
+                recognizer: TapGestureRecognizer()
+                  ..onTap = () {
+                    showDialog(
+                      context: context,
+                      builder: (_) => AlertDialog(
+                        title: const Text('Visitar site'),
+                        content: const SelectableText('https://www.multiti.com.br'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('Fechar'),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
               ),
-              textAlign: TextAlign.center,
-            ),
+            ],
           ),
-        ],
         ),
       ),
     );
