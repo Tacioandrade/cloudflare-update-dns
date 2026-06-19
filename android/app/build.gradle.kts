@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.cloudflare_dns"
+    namespace = "br.com.multiti.cloudflare_update_dns"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "25.1.8937393"
 
@@ -20,7 +20,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.cloudflare_dns"
+        applicationId = "br.com.multiti.cloudflare_update_dns"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode()

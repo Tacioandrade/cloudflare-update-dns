@@ -17,28 +17,73 @@ class ApiService {
   }
 
   static Future<List<dynamic>> listZones() async {
-    final response = await http.get(Uri.parse('$baseUrl/zones'), headers: await _headers());
-    if (response.statusCode == 200) {
-      final json = jsonDecode(response.body);
-      if (json['success']) {
-        return json['result'];
+    List<dynamic> allZones = [];
+    int page = 1;
+    bool hasMore = true;
+
+    while (hasMore) {
+      final response = await http.get(
+        Uri.parse('$baseUrl/zones?per_page=50&page=$page'),
+        headers: await _headers(),
+      );
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        if (json['success']) {
+          allZones.addAll(json['result']);
+          final resultInfo = json['result_info'];
+          if (resultInfo != null && resultInfo['total_pages'] != null) {
+            final int totalPages = resultInfo['total_pages'];
+            if (page >= totalPages) {
+              hasMore = false;
+            } else {
+              page++;
+            }
+          } else {
+            hasMore = false;
+          }
+        } else {
+          throw Exception("Failed to load zones: ${json['errors']}");
+        }
+      } else {
+        throw Exception('Failed to load zones. HTTP ${response.statusCode}');
       }
     }
-    throw Exception('Failed to load zones');
+    return allZones;
   }
 
   static Future<List<dynamic>> listDnsRecords(String zoneId) async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/zones/$zoneId/dns_records?type=A,CNAME'),
-      headers: await _headers(),
-    );
-    if (response.statusCode == 200) {
-      final json = jsonDecode(response.body);
-      if (json['success']) {
-        return json['result'];
+    List<dynamic> allRecords = [];
+    int page = 1;
+    bool hasMore = true;
+
+    while (hasMore) {
+      final response = await http.get(
+        Uri.parse('$baseUrl/zones/$zoneId/dns_records?type=A,CNAME&per_page=100&page=$page'),
+        headers: await _headers(),
+      );
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        if (json['success']) {
+          allRecords.addAll(json['result']);
+          final resultInfo = json['result_info'];
+          if (resultInfo != null && resultInfo['total_pages'] != null) {
+            final int totalPages = resultInfo['total_pages'];
+            if (page >= totalPages) {
+              hasMore = false;
+            } else {
+              page++;
+            }
+          } else {
+            hasMore = false;
+          }
+        } else {
+          throw Exception("Failed to load DNS records: ${json['errors']}");
+        }
+      } else {
+        throw Exception('Failed to load DNS records. HTTP ${response.statusCode}');
       }
     }
-    throw Exception('Failed to load DNS records');
+    return allRecords;
   }
 
   static Future<void> createDnsRecord(String zoneId, Map<String, dynamic> data) async {
