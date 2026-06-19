@@ -4,6 +4,7 @@ class LocalStorage {
   static const String _keyAuth = 'authenticated';
   static const String _keyToken = 'cf_api_token';
   static const String _keyAppPassword = 'app_password';
+  static const String _keyDnsTypes = 'dns_types';
 
   static Future<bool> isAuthenticated() async {
     final prefs = await SharedPreferences.getInstance();
@@ -38,5 +39,15 @@ class LocalStorage {
   static Future<void> saveAppPassword(String password) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_keyAppPassword, password);
+  }
+
+  static Future<List<String>> getDnsTypes() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_keyDnsTypes) ?? ['A', 'CNAME'];
+  }
+
+  static Future<void> saveDnsTypes(List<String> types) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(_keyDnsTypes, types);
   }
 }

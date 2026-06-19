@@ -55,16 +55,18 @@ class ApiService {
     List<dynamic> allRecords = [];
     int page = 1;
     bool hasMore = true;
+    final allowedTypes = await LocalStorage.getDnsTypes();
 
     while (hasMore) {
       final response = await http.get(
-        Uri.parse('$baseUrl/zones/$zoneId/dns_records?type=A,CNAME&per_page=100&page=$page'),
+        Uri.parse('$baseUrl/zones/$zoneId/dns_records?per_page=100&page=$page'),
         headers: await _headers(),
       );
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body);
         if (json['success']) {
-          allRecords.addAll(json['result']);
+          final List<dynamic> result = json['result'];
+          allRecords.addAll(result.where((r) => allowedTypes.contains(r['type'])));
           final resultInfo = json['result_info'];
           if (resultInfo != null && resultInfo['total_pages'] != null) {
             final int totalPages = resultInfo['total_pages'];

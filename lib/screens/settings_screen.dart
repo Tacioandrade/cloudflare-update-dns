@@ -3,6 +3,7 @@ import '../core/constants.dart';
 import '../data/local_storage.dart';
 import '../data/api.dart';
 import '../widgets/footer.dart';
+import 'changelog_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({Key? key}) : super(key: key);
@@ -21,18 +22,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _obscureCurrentPass = true;
   bool _obscureNewPass = true;
   bool _obscureConfirmPass = true;
+  
+  List<String> _dnsTypes = [];
+  final List<String> _availableTypes = ['A', 'AAAA', 'CNAME', 'MX', 'NS', 'TXT', 'SRV'];
 
   @override
   void initState() {
     super.initState();
-    _loadToken();
+    _loadSettings();
   }
 
-  Future<void> _loadToken() async {
+  Future<void> _loadSettings() async {
     final token = await LocalStorage.getToken();
+    final types = await LocalStorage.getDnsTypes();
     if (token != null) {
       _tokenController.text = token;
     }
+    setState(() {
+      _dnsTypes = types;
+    });
   }
 
   Future<void> _saveToken() async {
@@ -154,6 +162,41 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 32),
             const Divider(),
             const SizedBox(height: 16),
+            const Text('Tipos de Registro DNS', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            const Text('Selecione quais tipos de DNS o sistema irá carregar e exibir:', style: TextStyle(color: Colors.grey)),
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 8.0,
+              runSpacing: 8.0,
+              children: _availableTypes.map((type) {
+                return FilterChip(
+                  label: Text(type),
+                  selected: _dnsTypes.contains(type),
+                  selectedColor: AppColors.primary.withOpacity(0.3),
+                  checkmarkColor: AppColors.primary,
+                  onSelected: (selected) {
+                    setState(() {
+                      if (selected) {
+                        _dnsTypes.add(type);
+                      } else {
+                        if (_dnsTypes.length > 1) {
+                          _dnsTypes.remove(type);
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('É necessário pelo menos um tipo de registro.')),
+                          );
+                        }
+                      }
+                    });
+                    LocalStorage.saveDnsTypes(_dnsTypes);
+                  },
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 32),
+            const Divider(),
+            const SizedBox(height: 16),
             const Text('Alterar Senha do App', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             TextField(
@@ -209,12 +252,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
+              height: 50,
               child: ElevatedButton(
                 onPressed: _changePassword,
                 style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
                 child: const Text('ATUALIZAR SENHA', style: TextStyle(color: Colors.white)),
               ),
             ),
+            const SizedBox(height: 32),
+            const Divider(),
+            const SizedBox(height: 16),
+            const Text('Sobre o Aplicativo', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const ChangelogScreen()),
+                  );
+                },
+                icon: const Icon(Icons.history, color: AppColors.primary),
+                label: const Text('VER HISTÓRICO DE VERSÕES (CHANGELOG)', style: TextStyle(color: AppColors.textPrimary)),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: AppColors.primary),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
           ],
         ),
       ),

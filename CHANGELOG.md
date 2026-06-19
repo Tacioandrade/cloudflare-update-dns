@@ -2,6 +2,11 @@
 
 Todas as alterações notáveis neste projeto serão documentadas neste arquivo.
 
+## [1.0.4] - 2026-06-19
+### Adicionado / Corrigido
+- Adicionado seletor de tipos de entradas DNS nas configurações para permitir filtrar quais registros o sistema carrega.
+- Adicionada tela de visualização do Changelog diretamente no aplicativo.
+
 ## [1.0.3] - 2026-06-19
 ### Adicionado / Corrigido
 - Implementado suporte nativo para login via Biometria (Impressão digital / Reconhecimento facial) com fallback transparente e automático.

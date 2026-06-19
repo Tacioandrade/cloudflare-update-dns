@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/constants.dart';
 import '../data/api.dart';
+import '../data/local_storage.dart';
 import '../widgets/footer.dart';
 
 class DnsEditorScreen extends StatefulWidget {
@@ -18,10 +19,16 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
   bool _isLoading = true;
   String _searchQuery = '';
   bool _isSearching = false;
+  List<String> _allowedTypes = ['A', 'CNAME'];
 
   @override
   void initState() {
     super.initState();
+    _loadTypesAndRecords();
+  }
+
+  Future<void> _loadTypesAndRecords() async {
+    _allowedTypes = await LocalStorage.getDnsTypes();
     _loadRecords();
   }
 
@@ -95,10 +102,11 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
                   children: [
                     DropdownButtonFormField<String>(
                       value: typeController.text,
-                      items: const [
-                        DropdownMenuItem(value: 'A', child: Text('A')),
-                        DropdownMenuItem(value: 'CNAME', child: Text('CNAME')),
-                      ],
+                      items: (_allowedTypes.contains(typeController.text) 
+                              ? _allowedTypes 
+                              : [..._allowedTypes, typeController.text]).map((type) {
+                        return DropdownMenuItem(value: type, child: Text(type));
+                      }).toList(),
                       onChanged: (val) => setStateDialog(() => typeController.text = val!),
                       decoration: const InputDecoration(labelText: 'Tipo'),
                     ),
