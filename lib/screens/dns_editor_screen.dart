@@ -65,8 +65,20 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
   }
 
   void _showRecordDialog([dynamic record]) {
+    String initialName = '';
+    if (record != null) {
+      String fullName = record['name'];
+      if (fullName == widget.zoneName) {
+        initialName = '@';
+      } else if (fullName.endsWith('.${widget.zoneName}')) {
+        initialName = fullName.substring(0, fullName.length - widget.zoneName.length - 1);
+      } else {
+        initialName = fullName;
+      }
+    }
+
     final typeController = TextEditingController(text: record != null ? record['type'] : 'A');
-    final nameController = TextEditingController(text: record != null ? record['name'] : '');
+    final nameController = TextEditingController(text: initialName);
     final contentController = TextEditingController(text: record != null ? record['content'] : '');
     bool isProxied = record != null ? record['proxied'] : true;
 
@@ -90,7 +102,14 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
                       onChanged: (val) => setStateDialog(() => typeController.text = val!),
                       decoration: const InputDecoration(labelText: 'Tipo'),
                     ),
-                    TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Nome (ex: @ ou sub)')),
+                    TextField(
+                      controller: nameController, 
+                      decoration: InputDecoration(
+                        labelText: 'Nome (Subdomínio)',
+                        hintText: '@ ou www',
+                        suffixText: '.${widget.zoneName}',
+                      ),
+                    ),
                     TextField(controller: contentController, decoration: const InputDecoration(labelText: 'Conteúdo (IP ou destino)')),
                     SwitchListTile(
                       title: const Text('Proxied'),
@@ -105,9 +124,16 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
                 ElevatedButton(
                   onPressed: () async {
                     Navigator.pop(context);
+                    String finalName = nameController.text.trim();
+                    if (finalName == '@' || finalName.isEmpty) {
+                      finalName = widget.zoneName;
+                    } else if (!finalName.endsWith('.${widget.zoneName}')) {
+                      finalName = '$finalName.${widget.zoneName}';
+                    }
+
                     final data = {
                       'type': typeController.text,
-                      'name': nameController.text,
+                      'name': finalName,
                       'content': contentController.text,
                       'proxied': isProxied,
                     };

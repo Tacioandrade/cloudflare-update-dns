@@ -2,6 +2,11 @@
 
 Todas as alterações notáveis neste projeto serão documentadas neste arquivo.
 
+## [1.0.3] - 2026-06-19
+### Adicionado / Corrigido
+- Implementado suporte nativo para login via Biometria (Impressão digital / Reconhecimento facial) com fallback transparente e automático.
+- Ajuste na edição de domínios DNS para permitir a edição de apenas o subdomínio da entrada.
+
 ## [1.0.2] - 2026-06-18
 ### Adicionado / Corrigido
 - Correção na lógica de integração com a API para realizar paginação automática. Agora o aplicativo puxa todos os domínios e registros DNS que o token tem acesso, contornando o limite padrão de 20 registros por página do Cloudflare.
