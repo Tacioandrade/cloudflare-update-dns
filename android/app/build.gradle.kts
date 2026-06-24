@@ -9,7 +9,7 @@ import java.util.Properties
 import java.io.FileInputStream
 
 val keystoreProperties = Properties()
-val keystorePropertiesFile = rootProject.file("app/key.properties")
+val keystorePropertiesFile = rootProject.file("key.properties")
 if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
@@ -50,7 +50,7 @@ android {
             signingConfig = if (keystorePropertiesFile.exists()) {
                 signingConfigs.getByName("release")
             } else {
-                signingConfigs.getByName("debug")
+                throw GradleException("Missing android/key.properties. Release APKs must be signed with the persistent release keystore.")
             }
         }
     }
@@ -59,4 +59,3 @@ android {
 flutter {
     source = "../.."
 }
-
