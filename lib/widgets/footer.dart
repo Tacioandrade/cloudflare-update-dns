@@ -1,8 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class AppFooter extends StatelessWidget {
-  const AppFooter({Key? key}) : super(key: key);
+  const AppFooter({super.key});
+
+  Future<void> _openCompanyWebsite(BuildContext context) async {
+    final opened = await launchUrl(
+      Uri.parse('https://www.multiti.com.br'),
+      mode: LaunchMode.externalApplication,
+    );
+
+    if (!opened && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Não foi possível abrir o site.')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,27 +31,13 @@ class AppFooter extends StatelessWidget {
             children: [
               const TextSpan(text: 'Desenvolvido por '),
               TextSpan(
-                text: 'Multiti Consultoria & Solucoes em Tecnologia',
+                text: 'MultiTI Consultoria & Soluções em Tecnologia',
                 style: const TextStyle(
                   color: Colors.blueAccent,
                   decoration: TextDecoration.underline,
                 ),
                 recognizer: TapGestureRecognizer()
-                  ..onTap = () {
-                    showDialog(
-                      context: context,
-                      builder: (_) => AlertDialog(
-                        title: const Text('Visitar site'),
-                        content: const SelectableText('https://www.multiti.com.br'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text('Fechar'),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
+                  ..onTap = () => _openCompanyWebsite(context),
               ),
             ],
           ),

@@ -5,6 +5,7 @@ class LocalStorage {
   static const String _keyToken = 'cf_api_token';
   static const String _keyAppPassword = 'app_password';
   static const String _keyDnsTypes = 'dns_types';
+  static const String _keyThemeMode = 'theme_mode';
 
   static Future<bool> isAuthenticated() async {
     final prefs = await SharedPreferences.getInstance();
@@ -55,5 +56,15 @@ class LocalStorage {
   static Future<void> saveDnsTypes(List<String> types) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList(_keyDnsTypes, types);
+  }
+
+  static Future<String> getThemeMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_keyThemeMode) ?? 'system';
+  }
+
+  static Future<void> saveThemeMode(String themeMode) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyThemeMode, themeMode);
   }
 }

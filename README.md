@@ -6,7 +6,7 @@
 
 - 🔐 **Autenticação local**
 - 🌐 **Listagem de domínios** com status (ativo/pendente/inativo)
-- 📝 **Editor DNS** completo para registros **A** e **CNAME**
+- 📝 **Editor DNS** completo para registros **DNS**, sendo configurados quais entradas listar na tela de Configurações
 - 🔄 **Toggle de proxy** Cloudflare com atualização em tempo real
 - ⚙️ **Configurações** para gerenciar o API Token
 - 📱 **App Nativo Android** — distribuído em formato `.apk`

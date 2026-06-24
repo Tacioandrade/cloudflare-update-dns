@@ -1,8 +1,14 @@
 # Changelog
 
-Projeto no GitHub: https://github.com/Tacioandrade/cloudflare-update-dns/
+Projeto no GitHub: [https://github.com/Tacioandrade/cloudflare-update-dns/](https://github.com/Tacioandrade/cloudflare-update-dns/)
 
 Todas as alterações notáveis neste projeto serão documentadas neste arquivo.
+
+## [1.0.7] - 2026-06-24
+### Adicionado / Corrigido
+- Adicionado suporte a tema claro e escuro com detecção automática do tema configurado no sistema operacional.
+- Adicionada opção em Configurações para escolher entre tema do sistema, claro ou escuro.
+- Adicionada localização nativa do Flutter para exibir textos internos, como copiar, colar e selecionar tudo, no idioma do dispositivo.
 
 ## [1.0.6] - 2026-06-24
 ### Adicionado / Corrigido

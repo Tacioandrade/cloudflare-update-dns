@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/app_theme.dart';
 import '../core/constants.dart';
 import '../data/local_storage.dart';
 import '../data/api.dart';
@@ -23,6 +24,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _obscureNewPass = true;
   bool _obscureConfirmPass = true;
 
+  String _themeMode = AppThemeController.systemValue;
   List<String> _dnsTypes = [];
   final List<String> _availableTypes = [
     'A',
@@ -43,12 +45,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _loadSettings() async {
     final token = await LocalStorage.getToken();
     final types = await LocalStorage.getDnsTypes();
+    final themeMode = await LocalStorage.getThemeMode();
     if (token != null) {
       _tokenController.text = token;
     }
     setState(() {
       _dnsTypes = types;
+      _themeMode = themeMode;
     });
+  }
+
+  Future<void> _saveThemeMode(String value) async {
+    await LocalStorage.saveThemeMode(value);
+    AppThemeController.themeMode.value =
+        AppThemeController.fromStorageValue(value);
+    if (mounted) {
+      setState(() {
+        _themeMode = value;
+      });
+    }
   }
 
   Future<void> _saveToken() async {
@@ -190,6 +205,42 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 32),
             const Divider(),
             const SizedBox(height: 16),
+            const Text('Tema do Aplicativo',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            const Text(
+                'Escolha um tema fixo ou use automaticamente o tema configurado no sistema.',
+                style: TextStyle(color: Colors.grey)),
+            const SizedBox(height: 16),
+            DropdownButtonFormField<String>(
+              value: _themeMode,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.palette),
+              ),
+              items: const [
+                DropdownMenuItem(
+                  value: AppThemeController.systemValue,
+                  child: Text('Usar tema do sistema'),
+                ),
+                DropdownMenuItem(
+                  value: AppThemeController.lightValue,
+                  child: Text('Claro'),
+                ),
+                DropdownMenuItem(
+                  value: AppThemeController.darkValue,
+                  child: Text('Escuro'),
+                ),
+              ],
+              onChanged: (value) {
+                if (value != null) {
+                  _saveThemeMode(value);
+                }
+              },
+            ),
+            const SizedBox(height: 32),
+            const Divider(),
+            const SizedBox(height: 16),
             const Text('Tipos de Registro DNS',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
@@ -317,8 +368,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   );
                 },
                 icon: const Icon(Icons.history, color: AppColors.primary),
-                label: const Text('VER HISTÓRICO DE VERSÕES (CHANGELOG)',
-                    style: TextStyle(color: AppColors.textPrimary)),
+                label: Text('VER HISTÓRICO DE VERSÕES (CHANGELOG)',
+                    style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface)),
                 style: OutlinedButton.styleFrom(
                   side: const BorderSide(color: AppColors.primary),
                 ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'core/constants.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'core/app_theme.dart';
 import 'data/local_storage.dart';
 import 'screens/login_screen.dart';
 import 'screens/domains_screen.dart';
@@ -7,6 +8,9 @@ import 'screens/password_setup_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  final savedThemeMode = await LocalStorage.getThemeMode();
+  AppThemeController.themeMode.value =
+      AppThemeController.fromStorageValue(savedThemeMode);
   final hasPassword = await LocalStorage.hasAppPassword();
   final isAuth = hasPassword && await LocalStorage.isAuthenticated();
   runApp(CloudflareDnsApp(hasPassword: hasPassword, isAuth: isAuth));
@@ -24,28 +28,33 @@ class CloudflareDnsApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Cloudflarer DNS Manager',
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        primaryColor: AppColors.primary,
-        scaffoldBackgroundColor: AppColors.background,
-        colorScheme: const ColorScheme.dark(
-          primary: AppColors.primary,
-          surface: AppColors.surface,
-        ),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: AppColors.surface,
-          elevation: 0,
-        ),
-        useMaterial3: true,
-      ),
-      home: !hasPassword
-          ? const PasswordSetupScreen()
-          : isAuth
-              ? const DomainsScreen()
-              : const LoginScreen(),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: AppThemeController.themeMode,
+      builder: (context, themeMode, _) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'Cloudflarer DNS Manager',
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [
+            Locale('pt', 'BR'),
+            Locale('pt'),
+            Locale('en'),
+            Locale('es'),
+          ],
+          theme: AppThemeController.lightTheme,
+          darkTheme: AppThemeController.darkTheme,
+          themeMode: themeMode,
+          home: !hasPassword
+              ? const PasswordSetupScreen()
+              : isAuth
+                  ? const DomainsScreen()
+                  : const LoginScreen(),
+        );
+      },
     );
   }
 }
