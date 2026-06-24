@@ -6,10 +6,10 @@ import '../widgets/footer.dart';
 import 'changelog_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({Key? key}) : super(key: key);
+  const SettingsScreen({super.key});
 
   @override
-  _SettingsScreenState createState() => _SettingsScreenState();
+  State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
@@ -17,14 +17,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final _currentPassController = TextEditingController();
   final _newPassController = TextEditingController();
   final _confirmPassController = TextEditingController();
-  
+
   bool _obscureToken = true;
   bool _obscureCurrentPass = true;
   bool _obscureNewPass = true;
   bool _obscureConfirmPass = true;
-  
+
   List<String> _dnsTypes = [];
-  final List<String> _availableTypes = ['A', 'AAAA', 'CNAME', 'MX', 'NS', 'TXT', 'SRV'];
+  final List<String> _availableTypes = [
+    'A',
+    'AAAA',
+    'CNAME',
+    'MX',
+    'NS',
+    'TXT',
+    'SRV'
+  ];
 
   @override
   void initState() {
@@ -47,7 +55,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await LocalStorage.saveToken(_tokenController.text.trim());
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Token salvo!'), backgroundColor: AppColors.success),
+        const SnackBar(
+            content: Text('Token salvo!'), backgroundColor: AppColors.success),
       );
     }
   }
@@ -58,13 +67,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
       await ApiService.listZones();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Conexão bem-sucedida!'), backgroundColor: AppColors.success),
+          const SnackBar(
+              content: Text('Conexão bem-sucedida!'),
+              backgroundColor: AppColors.success),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Falha na conexão. Token inválido.'), backgroundColor: AppColors.error),
+          const SnackBar(
+              content: Text('Falha na conexão. Token inválido.'),
+              backgroundColor: AppColors.error),
         );
       }
     }
@@ -72,10 +85,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _changePassword() async {
     final currentPass = await LocalStorage.getAppPassword();
-    if (_currentPassController.text != currentPass) {
+    if (currentPass == null || _currentPassController.text != currentPass) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Senha atual incorreta!'), backgroundColor: AppColors.error),
+          const SnackBar(
+            content: Text('Senha atual incorreta!'),
+            backgroundColor: AppColors.error,
+          ),
         );
       }
       return;
@@ -84,7 +100,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (_newPassController.text.trim().isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('A nova senha não pode ser vazia!'), backgroundColor: AppColors.error),
+          const SnackBar(
+              content: Text('A nova senha não pode ser vazia!'),
+              backgroundColor: AppColors.error),
         );
       }
       return;
@@ -93,7 +111,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (_newPassController.text != _confirmPassController.text) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('As senhas não coincidem!'), backgroundColor: AppColors.error),
+          const SnackBar(
+              content: Text('As senhas não coincidem!'),
+              backgroundColor: AppColors.error),
         );
       }
       return;
@@ -106,7 +126,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Senha atualizada com sucesso!'), backgroundColor: AppColors.success),
+        const SnackBar(
+            content: Text('Senha atualizada com sucesso!'),
+            backgroundColor: AppColors.success),
       );
     }
   }
@@ -122,7 +144,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Cloudflare API Token', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text('Cloudflare API Token',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             TextField(
               controller: _tokenController,
@@ -130,7 +153,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               decoration: InputDecoration(
                 border: const OutlineInputBorder(),
                 suffixIcon: IconButton(
-                  icon: Icon(_obscureToken ? Icons.visibility : Icons.visibility_off),
+                  icon: Icon(
+                      _obscureToken ? Icons.visibility : Icons.visibility_off),
                   onPressed: () {
                     setState(() {
                       _obscureToken = !_obscureToken;
@@ -145,16 +169,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: _testToken,
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.grey[700]),
-                    child: const Text('TESTAR', style: TextStyle(color: Colors.white)),
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.grey[700]),
+                    child: const Text('TESTAR',
+                        style: TextStyle(color: Colors.white)),
                   ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: ElevatedButton(
                     onPressed: _saveToken,
-                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-                    child: const Text('SALVAR', style: TextStyle(color: Colors.white)),
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary),
+                    child: const Text('SALVAR',
+                        style: TextStyle(color: Colors.white)),
                   ),
                 ),
               ],
@@ -162,9 +190,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 32),
             const Divider(),
             const SizedBox(height: 16),
-            const Text('Tipos de Registro DNS', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text('Tipos de Registro DNS',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            const Text('Selecione quais tipos de DNS o sistema irá carregar e exibir:', style: TextStyle(color: Colors.grey)),
+            const Text(
+                'Selecione quais tipos de DNS o sistema irá carregar e exibir:',
+                style: TextStyle(color: Colors.grey)),
             const SizedBox(height: 16),
             Wrap(
               spacing: 8.0,
@@ -184,7 +215,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           _dnsTypes.remove(type);
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('É necessário pelo menos um tipo de registro.')),
+                            const SnackBar(
+                                content: Text(
+                                    'É necessário pelo menos um tipo de registro.')),
                           );
                         }
                       }
@@ -197,7 +230,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 32),
             const Divider(),
             const SizedBox(height: 16),
-            const Text('Alterar Senha do App', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text('Alterar Senha do App',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             TextField(
               controller: _currentPassController,
@@ -206,7 +240,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 labelText: 'Senha Atual',
                 border: const OutlineInputBorder(),
                 suffixIcon: IconButton(
-                  icon: Icon(_obscureCurrentPass ? Icons.visibility : Icons.visibility_off),
+                  icon: Icon(_obscureCurrentPass
+                      ? Icons.visibility
+                      : Icons.visibility_off),
                   onPressed: () {
                     setState(() {
                       _obscureCurrentPass = !_obscureCurrentPass;
@@ -223,7 +259,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 labelText: 'Nova Senha',
                 border: const OutlineInputBorder(),
                 suffixIcon: IconButton(
-                  icon: Icon(_obscureNewPass ? Icons.visibility : Icons.visibility_off),
+                  icon: Icon(_obscureNewPass
+                      ? Icons.visibility
+                      : Icons.visibility_off),
                   onPressed: () {
                     setState(() {
                       _obscureNewPass = !_obscureNewPass;
@@ -240,7 +278,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 labelText: 'Confirmar Nova Senha',
                 border: const OutlineInputBorder(),
                 suffixIcon: IconButton(
-                  icon: Icon(_obscureConfirmPass ? Icons.visibility : Icons.visibility_off),
+                  icon: Icon(_obscureConfirmPass
+                      ? Icons.visibility
+                      : Icons.visibility_off),
                   onPressed: () {
                     setState(() {
                       _obscureConfirmPass = !_obscureConfirmPass;
@@ -255,14 +295,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
               height: 50,
               child: ElevatedButton(
                 onPressed: _changePassword,
-                style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-                child: const Text('ATUALIZAR SENHA', style: TextStyle(color: Colors.white)),
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary),
+                child: const Text('ATUALIZAR SENHA',
+                    style: TextStyle(color: Colors.white)),
               ),
             ),
             const SizedBox(height: 32),
             const Divider(),
             const SizedBox(height: 16),
-            const Text('Sobre o Aplicativo', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text('Sobre o Aplicativo',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
@@ -274,7 +317,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   );
                 },
                 icon: const Icon(Icons.history, color: AppColors.primary),
-                label: const Text('VER HISTÓRICO DE VERSÕES (CHANGELOG)', style: TextStyle(color: AppColors.textPrimary)),
+                label: const Text('VER HISTÓRICO DE VERSÕES (CHANGELOG)',
+                    style: TextStyle(color: AppColors.textPrimary)),
                 style: OutlinedButton.styleFrom(
                   side: const BorderSide(color: AppColors.primary),
                 ),

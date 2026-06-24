@@ -1,6 +1,18 @@
 # Changelog
 
+Projeto no GitHub: https://github.com/Tacioandrade/cloudflare-update-dns/
+
 Todas as alterações notáveis neste projeto serão documentadas neste arquivo.
+
+## [1.0.6] - 2026-06-24
+### Adicionado / Corrigido
+- Adicionada funcionalidade de limpeza do cache da CDN para a zona selecionada na tela de registros DNS.
+- Documentadas as permissões necessárias para usar a limpeza de Cache CDN com Token customizado da Cloudflare.
+
+## [1.0.5] - 2026-06-24
+### Adicionado / Corrigido
+- Alterado o primeiro acesso para abrir diretamente a tela de criação de senha, sem exigir senha padrão ou biometria.
+- Removido o campo de usuário da tela de login; o acesso agora é feito apenas por senha cadastrada ou biometria.
 
 ## [1.0.4] - 2026-06-19
 ### Adicionado / Corrigido

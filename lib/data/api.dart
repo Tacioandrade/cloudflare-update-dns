@@ -4,8 +4,8 @@ import 'package:http/http.dart' as http;
 import 'local_storage.dart';
 
 class ApiService {
-  static const String baseUrl = kIsWeb 
-      ? 'http://localhost:8081/client/v4' 
+  static const String baseUrl = kIsWeb
+      ? 'http://localhost:8081/client/v4'
       : 'https://api.cloudflare.com/client/v4';
 
   static Future<Map<String, String>> _headers() async {
@@ -66,7 +66,8 @@ class ApiService {
         final json = jsonDecode(response.body);
         if (json['success']) {
           final List<dynamic> result = json['result'];
-          allRecords.addAll(result.where((r) => allowedTypes.contains(r['type'])));
+          allRecords
+              .addAll(result.where((r) => allowedTypes.contains(r['type'])));
           final resultInfo = json['result_info'];
           if (resultInfo != null && resultInfo['total_pages'] != null) {
             final int totalPages = resultInfo['total_pages'];
@@ -82,13 +83,15 @@ class ApiService {
           throw Exception("Failed to load DNS records: ${json['errors']}");
         }
       } else {
-        throw Exception('Failed to load DNS records. HTTP ${response.statusCode}');
+        throw Exception(
+            'Failed to load DNS records. HTTP ${response.statusCode}');
       }
     }
     return allRecords;
   }
 
-  static Future<void> createDnsRecord(String zoneId, Map<String, dynamic> data) async {
+  static Future<void> createDnsRecord(
+      String zoneId, Map<String, dynamic> data) async {
     final response = await http.post(
       Uri.parse('$baseUrl/zones/$zoneId/dns_records'),
       headers: await _headers(),
@@ -98,7 +101,8 @@ class ApiService {
     if (!json['success']) throw Exception('Failed to create record');
   }
 
-  static Future<void> updateDnsRecord(String zoneId, String recordId, Map<String, dynamic> data) async {
+  static Future<void> updateDnsRecord(
+      String zoneId, String recordId, Map<String, dynamic> data) async {
     final response = await http.patch(
       Uri.parse('$baseUrl/zones/$zoneId/dns_records/$recordId'),
       headers: await _headers(),
@@ -115,5 +119,22 @@ class ApiService {
     );
     final json = jsonDecode(response.body);
     if (!json['success']) throw Exception('Failed to delete record');
+  }
+
+  static Future<void> purgeCache(String zoneId) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/zones/$zoneId/purge_cache'),
+      headers: await _headers(),
+      body: jsonEncode({'purge_everything': true}),
+    );
+    final json = jsonDecode(response.body);
+    if (!json['success']) {
+      if (response.statusCode == 401 || response.statusCode == 403) {
+        throw Exception(
+          'Token sem permissão para limpar cache. Adicione a permissão Cache Purge ao token da Cloudflare.',
+        );
+      }
+      throw Exception('Failed to purge cache: ${json['errors']}');
+    }
   }
 }

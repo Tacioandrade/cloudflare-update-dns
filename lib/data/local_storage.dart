@@ -31,9 +31,15 @@ class LocalStorage {
     await prefs.setString(_keyToken, token);
   }
 
-  static Future<String> getAppPassword() async {
+  static Future<String?> getAppPassword() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_keyAppPassword) ?? 'admin';
+    return prefs.getString(_keyAppPassword);
+  }
+
+  static Future<bool> hasAppPassword() async {
+    final prefs = await SharedPreferences.getInstance();
+    final password = prefs.getString(_keyAppPassword);
+    return password != null && password.isNotEmpty;
   }
 
   static Future<void> saveAppPassword(String password) async {

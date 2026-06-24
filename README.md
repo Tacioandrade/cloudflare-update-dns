@@ -39,12 +39,9 @@ docker compose run --rm build
 Este comando provisiona um container com o Flutter SDK e as dependências Android, faz o build do projeto e salva o arquivo `.apk` resultante.
 > **Onde encontrar o APK:** Após a compilação, o arquivo gerado estará na pasta `build/app/outputs/flutter-apk/` (ou na pasta que você configurar como volume em seu `docker-compose.yml`) do seu projeto local. Você pode então transferi-lo para um dispositivo Android.
 
-## 🔑 Credenciais
+## 🔑 Acesso
 
-| Campo  | Valor       |
-| ------ | ----------- |
-| Usuário | `admin`    |
-| Senha   | `admin`    |
+No primeiro acesso, o aplicativo abre diretamente a tela de criação de senha. Depois disso, o login passa a ser feito apenas com a senha cadastrada ou biometria, quando disponível no dispositivo.
 
 ## ⚙️ Configuração do Cloudflare API Token
 
@@ -54,7 +51,12 @@ Este comando provisiona um container com o Flutter SDK e as dependências Androi
 4. Clique em **Testar** para validar
 5. Clique em **Salvar Token**
 
-> O token precisa ter permissão de **Zone:Read** e **DNS:Edit** para as zonas desejadas.
+> O token precisa ter permissão de **Zone:Read**, **DNS:Edit** e **Cache Purge** para as zonas desejadas.
+
+Para utilizar a funcionalidade de limpeza de Cache CDN de uma Zona, você precisa criar um Token customizado com as seguintes permissões:
+
+- **Zona / Zone** => **Limpeza do cache / Cache Purge** => **Limpar / Clear**
+- **Zona / Zone** => **DNS** => **Editar / Edit**
 
 ## 🏗️ Arquitetura
 

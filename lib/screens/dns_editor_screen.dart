@@ -8,10 +8,14 @@ class DnsEditorScreen extends StatefulWidget {
   final String zoneId;
   final String zoneName;
 
-  const DnsEditorScreen({Key? key, required this.zoneId, required this.zoneName}) : super(key: key);
+  const DnsEditorScreen({
+    super.key,
+    required this.zoneId,
+    required this.zoneName,
+  });
 
   @override
-  _DnsEditorScreenState createState() => _DnsEditorScreenState();
+  State<DnsEditorScreen> createState() => _DnsEditorScreenState();
 }
 
 class _DnsEditorScreenState extends State<DnsEditorScreen> {
@@ -19,6 +23,7 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
   bool _isLoading = true;
   String _searchQuery = '';
   bool _isSearching = false;
+  bool _isPurgingCache = false;
   List<String> _allowedTypes = ['A', 'CNAME'];
 
   @override
@@ -43,7 +48,8 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erro: $e')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Erro: $e')));
       }
     }
   }
@@ -58,7 +64,10 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
       });
       _loadRecords();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erro ao atualizar: $e')));
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Erro ao atualizar: $e')));
+      }
     }
   }
 
@@ -67,7 +76,64 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
       await ApiService.deleteDnsRecord(widget.zoneId, recordId);
       _loadRecords();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erro ao deletar: $e')));
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Erro ao deletar: $e')));
+      }
+    }
+  }
+
+  Future<void> _confirmPurgeCache() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Confirme a limpeza do Cache da CDN'),
+        content: const Text(
+          'Limpar o cache pode tornar seu site temporariamente lento, deseja continuar?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text(
+              'Limpar',
+              style: TextStyle(color: Colors.black),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true || !mounted) return;
+
+    setState(() => _isPurgingCache = true);
+    try {
+      await ApiService.purgeCache(widget.zoneId);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Cache da CDN limpo com sucesso.'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao limpar cache da CDN: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isPurgingCache = false);
+      }
     }
   }
 
@@ -78,15 +144,18 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
       if (fullName == widget.zoneName) {
         initialName = '@';
       } else if (fullName.endsWith('.${widget.zoneName}')) {
-        initialName = fullName.substring(0, fullName.length - widget.zoneName.length - 1);
+        initialName =
+            fullName.substring(0, fullName.length - widget.zoneName.length - 1);
       } else {
         initialName = fullName;
       }
     }
 
-    final typeController = TextEditingController(text: record != null ? record['type'] : 'A');
+    final typeController =
+        TextEditingController(text: record != null ? record['type'] : 'A');
     final nameController = TextEditingController(text: initialName);
-    final contentController = TextEditingController(text: record != null ? record['content'] : '');
+    final contentController =
+        TextEditingController(text: record != null ? record['content'] : '');
     bool isProxied = record != null ? record['proxied'] : true;
 
     showDialog(
@@ -102,23 +171,28 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
                   children: [
                     DropdownButtonFormField<String>(
                       value: typeController.text,
-                      items: (_allowedTypes.contains(typeController.text) 
-                              ? _allowedTypes 
-                              : [..._allowedTypes, typeController.text]).map((type) {
+                      items: (_allowedTypes.contains(typeController.text)
+                              ? _allowedTypes
+                              : [..._allowedTypes, typeController.text])
+                          .map((type) {
                         return DropdownMenuItem(value: type, child: Text(type));
                       }).toList(),
-                      onChanged: (val) => setStateDialog(() => typeController.text = val!),
+                      onChanged: (val) =>
+                          setStateDialog(() => typeController.text = val!),
                       decoration: const InputDecoration(labelText: 'Tipo'),
                     ),
                     TextField(
-                      controller: nameController, 
+                      controller: nameController,
                       decoration: InputDecoration(
                         labelText: 'Nome (Subdomínio)',
                         hintText: '@ ou www',
                         suffixText: '.${widget.zoneName}',
                       ),
                     ),
-                    TextField(controller: contentController, decoration: const InputDecoration(labelText: 'Conteúdo (IP ou destino)')),
+                    TextField(
+                        controller: contentController,
+                        decoration: const InputDecoration(
+                            labelText: 'Conteúdo (IP ou destino)')),
                     SwitchListTile(
                       title: const Text('Proxied'),
                       value: isProxied,
@@ -128,7 +202,9 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
                 ),
               ),
               actions: [
-                TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+                TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Cancelar')),
                 ElevatedButton(
                   onPressed: () async {
                     Navigator.pop(context);
@@ -149,11 +225,13 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
                       if (record == null) {
                         await ApiService.createDnsRecord(widget.zoneId, data);
                       } else {
-                        await ApiService.updateDnsRecord(widget.zoneId, record['id'], data);
+                        await ApiService.updateDnsRecord(
+                            widget.zoneId, record['id'], data);
                       }
                       _loadRecords();
                     } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erro: $e')));
+                      ScaffoldMessenger.of(context)
+                          .showSnackBar(SnackBar(content: Text('Erro: $e')));
                     }
                   },
                   child: const Text('Salvar'),
@@ -168,7 +246,6 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
 
   @override
   Widget build(BuildContext context) {
-    print('>>> BUILDING DNS EDITOR SCREEN: _isSearching=$_isSearching');
     return Scaffold(
       appBar: AppBar(
         title: _isSearching
@@ -186,6 +263,17 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
               )
             : Text(widget.zoneName),
         actions: [
+          IconButton(
+            tooltip: 'Limpar cache da CDN',
+            icon: _isPurgingCache
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.cleaning_services),
+            onPressed: _isPurgingCache ? null : _confirmPurgeCache,
+          ),
           IconButton(
             icon: Icon(_isSearching ? Icons.close : Icons.search),
             onPressed: () {
@@ -208,9 +296,18 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
                 builder: (context) {
                   final filteredRecords = _records.where((record) {
                     final search = _searchQuery.toLowerCase();
-                    return record['name'].toString().toLowerCase().contains(search) ||
-                           record['content'].toString().toLowerCase().contains(search) ||
-                           record['type'].toString().toLowerCase().contains(search);
+                    return record['name']
+                            .toString()
+                            .toLowerCase()
+                            .contains(search) ||
+                        record['content']
+                            .toString()
+                            .toLowerCase()
+                            .contains(search) ||
+                        record['type']
+                            .toString()
+                            .toLowerCase()
+                            .contains(search);
                   }).toList();
 
                   if (filteredRecords.isEmpty) {
@@ -218,7 +315,8 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
                       children: const [
                         Padding(
                           padding: EdgeInsets.only(top: 100),
-                          child: Center(child: Text('Nenhum registro encontrado.')),
+                          child: Center(
+                              child: Text('Nenhum registro encontrado.')),
                         )
                       ],
                     );
@@ -228,53 +326,67 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
                     itemCount: filteredRecords.length,
                     itemBuilder: (context, index) {
                       final record = filteredRecords[index];
-                  return Card(
-                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: ListTile(
-                      title: Text('${record['type']} • ${record['name']}', style: const TextStyle(fontWeight: FontWeight.bold)),
-                      subtitle: Text(record['content']),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Switch(
-                            value: record['proxied'],
-                            onChanged: record['proxiable'] ? (val) => _toggleProxy(record, val) : null,
-                            activeColor: AppColors.primary,
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.edit),
-                            onPressed: () => _showRecordDialog(record),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.delete, color: AppColors.error),
-                            onPressed: () async {
-                              final confirm = await showDialog<bool>(
-                                context: context,
-                                builder: (_) => AlertDialog(
-                                  title: const Text('Confirmar exclusão'),
-                                  content: Text('Deletar o registro ${record['name']}?'),
-                                  actions: [
-                                    TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
-                                    ElevatedButton(
-                                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
-                                      onPressed: () => Navigator.pop(context, true),
-                                      child: const Text('Deletar'),
+                      return Card(
+                        margin: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        child: ListTile(
+                          title: Text('${record['type']} • ${record['name']}',
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold)),
+                          subtitle: Text(record['content']),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Switch(
+                                value: record['proxied'],
+                                onChanged: record['proxiable']
+                                    ? (val) => _toggleProxy(record, val)
+                                    : null,
+                                activeColor: AppColors.primary,
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.edit),
+                                onPressed: () => _showRecordDialog(record),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete,
+                                    color: AppColors.error),
+                                onPressed: () async {
+                                  final confirm = await showDialog<bool>(
+                                    context: context,
+                                    builder: (_) => AlertDialog(
+                                      title: const Text('Confirmar exclusão'),
+                                      content: Text(
+                                          'Deletar o registro ${record['name']}?'),
+                                      actions: [
+                                        TextButton(
+                                            onPressed: () =>
+                                                Navigator.pop(context, false),
+                                            child: const Text('Cancelar')),
+                                        ElevatedButton(
+                                          style: ElevatedButton.styleFrom(
+                                              backgroundColor: AppColors.error),
+                                          onPressed: () =>
+                                              Navigator.pop(context, true),
+                                          child: const Text('Deletar'),
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
-                              );
-                              if (confirm == true) _deleteRecord(record['id']);
-                            },
+                                  );
+                                  if (confirm == true) {
+                                    _deleteRecord(record['id']);
+                                  }
+                                },
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                    ),
+                        ),
+                      );
+                    },
                   );
                 },
-              );
-            },
-          ),
-        ),
+              ),
+            ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showRecordDialog(),
         child: const Icon(Icons.add),

@@ -7,17 +7,16 @@ import '../widgets/footer.dart';
 import 'domains_screen.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+  const LoginScreen({super.key});
 
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _userController = TextEditingController();
   final _passController = TextEditingController();
   bool _obscurePassword = true;
-  
+
   final LocalAuthentication auth = LocalAuthentication();
   bool _canCheckBiometrics = false;
 
@@ -30,7 +29,8 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _checkBiometrics() async {
     if (kIsWeb) return;
     try {
-      final canCheck = await auth.canCheckBiometrics || await auth.isDeviceSupported();
+      final canCheck =
+          await auth.canCheckBiometrics || await auth.isDeviceSupported();
       if (mounted) {
         setState(() {
           _canCheckBiometrics = canCheck;
@@ -68,7 +68,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _login() async {
     final expectedPassword = await LocalStorage.getAppPassword();
-    if (_userController.text == 'admin' && _passController.text == expectedPassword) {
+    if (expectedPassword != null && _passController.text == expectedPassword) {
       await LocalStorage.login();
       if (mounted) {
         Navigator.of(context).pushReplacement(
@@ -88,6 +88,12 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   @override
+  void dispose() {
+    _passController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       bottomNavigationBar: const AppFooter(),
@@ -97,7 +103,7 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.cloud_circle, size: 100, color: AppColors.primary),
+              Image.asset('assets/icon.png', width: 100, height: 100),
               const SizedBox(height: 24),
               const Text(
                 'Cloudflare DNS',
@@ -116,24 +122,21 @@ class _LoginScreenState extends State<LoginScreen> {
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                     ),
-                    child: const Text('ENTRAR COM BIOMETRIA', style: TextStyle(fontSize: 16)),
+                    child: const Text(
+                      'ENTRAR COM BIOMETRIA',
+                      style: TextStyle(fontSize: 16),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
                 TextButton(
                   onPressed: () => setState(() => _canCheckBiometrics = false),
-                  child: const Text('Usar senha ao invés da biometria', style: TextStyle(color: Colors.grey)),
-                ),
-              ] else ...[
-                TextField(
-                  controller: _userController,
-                  decoration: const InputDecoration(
-                    labelText: 'Usuário',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.person),
+                  child: const Text(
+                    'Usar senha ao invés da biometria',
+                    style: TextStyle(color: Colors.grey),
                   ),
                 ),
-                const SizedBox(height: 16),
+              ] else ...[
                 TextField(
                   controller: _passController,
                   obscureText: _obscurePassword,
@@ -142,7 +145,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     border: const OutlineInputBorder(),
                     prefixIcon: const Icon(Icons.lock),
                     suffixIcon: IconButton(
-                      icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off),
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                      ),
                       onPressed: () {
                         setState(() {
                           _obscurePassword = !_obscurePassword;
