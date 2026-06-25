@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../core/constants.dart';
 import '../data/api.dart';
 import '../data/local_storage.dart';
@@ -25,6 +26,13 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
   bool _isSearching = false;
   bool _isPurgingCache = false;
   List<String> _allowedTypes = ['A', 'CNAME'];
+  final FocusNode _searchFocusNode = FocusNode();
+
+  @override
+  void dispose() {
+    _searchFocusNode.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -158,13 +166,51 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
         TextEditingController(text: record != null ? record['content'] : '');
     bool isProxied = record != null ? record['proxied'] : true;
 
+    Future<void> onSave() async {
+      Navigator.pop(context);
+      String finalName = nameController.text.trim();
+      if (finalName == '@' || finalName.isEmpty) {
+        finalName = widget.zoneName;
+      } else if (!finalName.endsWith('.${widget.zoneName}')) {
+        finalName = '$finalName.${widget.zoneName}';
+      }
+
+      final data = {
+        'type': typeController.text,
+        'name': finalName,
+        'content': contentController.text,
+        'proxied': isProxied,
+      };
+      try {
+        if (record == null) {
+          await ApiService.createDnsRecord(widget.zoneId, data);
+        } else {
+          await ApiService.updateDnsRecord(
+              widget.zoneId, record['id'], data);
+        }
+        _loadRecords();
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(this.context)
+            .showSnackBar(SnackBar(content: Text('Erro: $e')));
+      }
+    }
+
     showDialog(
       context: context,
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
-            return AlertDialog(
-              title: Text(record == null ? 'Novo Registro' : 'Editar Registro'),
+            return CallbackShortcuts(
+              bindings: {
+                const SingleActivator(LogicalKeyboardKey.escape): () {
+                  Navigator.pop(context);
+                },
+              },
+              child: FocusScope(
+                autofocus: true,
+                child: AlertDialog(
+                  title: Text(record == null ? 'Novo Registro' : 'Editar Registro'),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -183,6 +229,7 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
                     ),
                     TextField(
                       controller: nameController,
+                      onSubmitted: (_) => onSave(),
                       decoration: InputDecoration(
                         labelText: 'Nome (Subdomínio)',
                         hintText: '@ ou www',
@@ -191,6 +238,7 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
                     ),
                     TextField(
                         controller: contentController,
+                        onSubmitted: (_) => onSave(),
                         decoration: const InputDecoration(
                             labelText: 'Conteúdo (IP ou destino)')),
                     SwitchListTile(
@@ -206,38 +254,12 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
                     onPressed: () => Navigator.pop(context),
                     child: const Text('Cancelar')),
                 ElevatedButton(
-                  onPressed: () async {
-                    Navigator.pop(context);
-                    String finalName = nameController.text.trim();
-                    if (finalName == '@' || finalName.isEmpty) {
-                      finalName = widget.zoneName;
-                    } else if (!finalName.endsWith('.${widget.zoneName}')) {
-                      finalName = '$finalName.${widget.zoneName}';
-                    }
-
-                    final data = {
-                      'type': typeController.text,
-                      'name': finalName,
-                      'content': contentController.text,
-                      'proxied': isProxied,
-                    };
-                    try {
-                      if (record == null) {
-                        await ApiService.createDnsRecord(widget.zoneId, data);
-                      } else {
-                        await ApiService.updateDnsRecord(
-                            widget.zoneId, record['id'], data);
-                      }
-                      _loadRecords();
-                    } catch (e) {
-                      if (!mounted) return;
-                      ScaffoldMessenger.of(this.context)
-                          .showSnackBar(SnackBar(content: Text('Erro: $e')));
-                    }
-                  },
+                  onPressed: onSave,
                   child: const Text('Salvar'),
                 ),
               ],
+                ),
+              ),
             );
           },
         );
@@ -247,10 +269,36 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.keyF, control: true): () {
+          if (!_isSearching) {
+            setState(() {
+              _isSearching = true;
+            });
+          }
+          Future.delayed(const Duration(milliseconds: 50), () {
+            _searchFocusNode.requestFocus();
+          });
+        },
+        const SingleActivator(LogicalKeyboardKey.escape): () {
+          if (_isSearching) {
+            setState(() {
+              _isSearching = false;
+              _searchQuery = '';
+            });
+          } else {
+            Navigator.pop(context);
+          }
+        },
+      },
+      child: FocusScope(
+        autofocus: true,
+        child: Scaffold(
       appBar: AppBar(
         title: _isSearching
             ? TextField(
+                focusNode: _searchFocusNode,
                 autofocus: true,
                 decoration: const InputDecoration(
                   hintText: 'Pesquisar registro...',
@@ -393,6 +441,8 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
         child: const Icon(Icons.add),
       ),
       bottomNavigationBar: const AppFooter(),
+        ),
+      ),
     );
   }
 }

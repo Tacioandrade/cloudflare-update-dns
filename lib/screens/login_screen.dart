@@ -113,7 +113,7 @@ class _LoginScreenState extends State<LoginScreen> {
               Image.asset('assets/icon.png', width: 100, height: 100),
               const SizedBox(height: 24),
               const Text(
-                'Cloudflare DNS',
+                'Cloudflare DNS Manager',
                 style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 48),
@@ -145,8 +145,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ] else ...[
                 TextField(
+                  autofocus: true,
                   controller: _passController,
                   obscureText: _obscurePassword,
+                  onSubmitted: (_) => _login(),
                   decoration: InputDecoration(
                     labelText: 'Senha',
                     border: const OutlineInputBorder(),

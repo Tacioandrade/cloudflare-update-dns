@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../widgets/footer.dart';
 
@@ -88,7 +88,15 @@ class _ChangelogScreenState extends State<ChangelogScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.escape): () {
+          Navigator.pop(context);
+        },
+      },
+      child: FocusScope(
+        autofocus: true,
+        child: Scaffold(
       appBar: AppBar(
         title: const Text('Histórico de Versões'),
       ),
@@ -99,6 +107,8 @@ class _ChangelogScreenState extends State<ChangelogScreen> {
               child: _buildChangelogContent(context),
             ),
       bottomNavigationBar: const AppFooter(),
+        ),
+      ),
     );
   }
 }

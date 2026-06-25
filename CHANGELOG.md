@@ -4,6 +4,16 @@ Projeto no GitHub: [https://github.com/Tacioandrade/cloudflare-update-dns/](http
 
 Todas as alterações notáveis neste projeto serão documentadas neste arquivo.
 
+## [1.1.1] - 2026-06-25
+### Adicionado / Corrigido
+- Ao abrir a aplicação o foco do teclado ficará no campo de senha ou biometria (dependendo do tipo de autenticação configurado).
+- Adicionado atalho de teclado `Ctrl + F` para abrir rapidamente a pesquisa nas listas de domínios e de registros DNS.
+- Adicionado atalho de teclado `ESC` para fechar rapidamente a funcionalidade de pesquisa.
+- Adicionado atalho de teclado `ESC` para fechar rapidamente a tela de criação/edição de registro DNS.
+- Adicionado atalho de teclado `ESC` para voltar a tela de listagem de domínios, caso esteja na tela de criação/edição de registro DNS ou configurações.
+- Implementado login automático ao pressionar a tecla `Enter` no campo de senha na tela de login.
+- Implementado salvamento automático do registro DNS ao pressionar a tecla `Enter` nos campos de subdomínio e conteúdo durante a criação/edição.
+
 ## [1.1.0] - 2026-06-25
 ### Adicionado
 - Adicionada documentação e fluxo de build/testes para a versão Windows.

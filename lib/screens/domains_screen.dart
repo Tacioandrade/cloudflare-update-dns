@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../core/constants.dart';
 import '../data/api.dart';
 import '../data/local_storage.dart';
@@ -20,6 +21,13 @@ class _DomainsScreenState extends State<DomainsScreen> {
   String? _error;
   String _searchQuery = '';
   bool _isSearching = false;
+  final FocusNode _searchFocusNode = FocusNode();
+
+  @override
+  void dispose() {
+    _searchFocusNode.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -67,10 +75,34 @@ class _DomainsScreenState extends State<DomainsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.keyF, control: true): () {
+          if (!_isSearching) {
+            setState(() {
+              _isSearching = true;
+            });
+          }
+          Future.delayed(const Duration(milliseconds: 50), () {
+            _searchFocusNode.requestFocus();
+          });
+        },
+        const SingleActivator(LogicalKeyboardKey.escape): () {
+          if (_isSearching) {
+            setState(() {
+              _isSearching = false;
+              _searchQuery = '';
+            });
+          }
+        },
+      },
+      child: FocusScope(
+        autofocus: true,
+        child: Scaffold(
       appBar: AppBar(
         title: _isSearching
             ? TextField(
+                focusNode: _searchFocusNode,
                 autofocus: true,
                 decoration: const InputDecoration(
                   hintText: 'Pesquisar domínio...',
@@ -116,6 +148,8 @@ class _DomainsScreenState extends State<DomainsScreen> {
         child: const Icon(Icons.refresh),
       ),
       bottomNavigationBar: const AppFooter(),
+        ),
+      ),
     );
   }
 
