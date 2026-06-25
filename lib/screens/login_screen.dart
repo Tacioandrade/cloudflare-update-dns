@@ -26,8 +26,15 @@ class _LoginScreenState extends State<LoginScreen> {
     _checkBiometrics();
   }
 
+  bool get _supportsBiometricAuth {
+    if (kIsWeb) return false;
+    return defaultTargetPlatform == TargetPlatform.android ||
+        defaultTargetPlatform == TargetPlatform.iOS ||
+        defaultTargetPlatform == TargetPlatform.windows;
+  }
+
   Future<void> _checkBiometrics() async {
-    if (kIsWeb) return;
+    if (!_supportsBiometricAuth) return;
     try {
       final canCheck =
           await auth.canCheckBiometrics || await auth.isDeviceSupported();
@@ -40,11 +47,12 @@ class _LoginScreenState extends State<LoginScreen> {
         _authenticate();
       }
     } catch (e) {
-      print('Erro ao checar biometria: $e');
+      debugPrint('Erro ao checar biometria: $e');
     }
   }
 
   Future<void> _authenticate() async {
+    if (!_supportsBiometricAuth) return;
     try {
       final authenticated = await auth.authenticate(
         localizedReason: 'Autentique-se para gerenciar seus domínios DNS',
@@ -62,7 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       }
     } catch (e) {
-      print('Erro na autenticacao: $e');
+      debugPrint('Erro na autenticacao: $e');
     }
   }
 

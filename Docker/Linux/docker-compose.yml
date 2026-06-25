@@ -1,0 +1,28 @@
+x-linux-builder: &linux-builder
+  image: cloudflare-dns-linux-builder
+  build:
+    context: ../..
+    dockerfile: Docker/Linux/Dockerfile
+  working_dir: /app
+  volumes:
+    - ../..:/app
+    - linux_pub_cache:/root/.pub-cache
+
+services:
+  analyze:
+    <<: *linux-builder
+    command: bash -c "flutter pub get && flutter analyze"
+
+  test:
+    <<: *linux-builder
+    command: bash -c "flutter pub get && flutter test"
+
+  build:
+    <<: *linux-builder
+    environment:
+      HOST_UID: ${HOST_UID:-1000}
+      HOST_GID: ${HOST_GID:-1000}
+    command: bash -c "flutter pub get && flutter build linux --release && chown -R $$HOST_UID:$$HOST_GID build/linux"
+
+volumes:
+  linux_pub_cache:

@@ -1,0 +1,49 @@
+x-windows-builder: &windows-builder
+  image: cloudflare-dns-windows-builder
+  build:
+    context: ../..
+    dockerfile: Docker/Windows/Dockerfile
+  working_dir: C:\app
+  environment:
+    PUB_CACHE: C:\pub-cache
+  volumes:
+    - type: bind
+      source: ../..
+      target: C:\app
+    - type: volume
+      source: windows_pub_cache
+      target: C:\pub-cache
+
+services:
+  analyze:
+    <<: *windows-builder
+    command:
+      - powershell
+      - -NoLogo
+      - -ExecutionPolicy
+      - Bypass
+      - -Command
+      - flutter pub get; if ($$LASTEXITCODE -ne 0) { exit $$LASTEXITCODE }; flutter analyze
+
+  test:
+    <<: *windows-builder
+    command:
+      - powershell
+      - -NoLogo
+      - -ExecutionPolicy
+      - Bypass
+      - -Command
+      - flutter pub get; if ($$LASTEXITCODE -ne 0) { exit $$LASTEXITCODE }; flutter test
+
+  build:
+    <<: *windows-builder
+    command:
+      - powershell
+      - -NoLogo
+      - -ExecutionPolicy
+      - Bypass
+      - -Command
+      - flutter pub get; if ($$LASTEXITCODE -ne 0) { exit $$LASTEXITCODE }; flutter build windows --release
+
+volumes:
+  windows_pub_cache:

@@ -8,12 +8,12 @@ import 'screens/password_setup_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await LocalStorage.logout();
   final savedThemeMode = await LocalStorage.getThemeMode();
   AppThemeController.themeMode.value =
       AppThemeController.fromStorageValue(savedThemeMode);
   final hasPassword = await LocalStorage.hasAppPassword();
-  final isAuth = hasPassword && await LocalStorage.isAuthenticated();
-  runApp(CloudflareDnsApp(hasPassword: hasPassword, isAuth: isAuth));
+  runApp(CloudflareDnsApp(hasPassword: hasPassword, isAuth: false));
 }
 
 class CloudflareDnsApp extends StatelessWidget {

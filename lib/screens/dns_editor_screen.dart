@@ -230,7 +230,8 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
                       }
                       _loadRecords();
                     } catch (e) {
-                      ScaffoldMessenger.of(context)
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(this.context)
                           .showSnackBar(SnackBar(content: Text('Erro: $e')));
                     }
                   },

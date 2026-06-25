@@ -8,10 +8,10 @@ import 'login_screen.dart';
 import '../widgets/footer.dart';
 
 class DomainsScreen extends StatefulWidget {
-  const DomainsScreen({Key? key}) : super(key: key);
+  const DomainsScreen({super.key});
 
   @override
-  _DomainsScreenState createState() => _DomainsScreenState();
+  State<DomainsScreen> createState() => _DomainsScreenState();
 }
 
 class _DomainsScreenState extends State<DomainsScreen> {
@@ -32,7 +32,7 @@ class _DomainsScreenState extends State<DomainsScreen> {
       _isLoading = true;
       _error = null;
     });
-    
+
     final token = await LocalStorage.getToken();
     if (token == null || token.isEmpty) {
       setState(() {
@@ -131,7 +131,9 @@ class _DomainsScreenState extends State<DomainsScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(_error!, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.error)),
+              Text(_error!,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: AppColors.error)),
               const SizedBox(height: 16),
               if (_error!.contains('Token'))
                 ElevatedButton(
@@ -164,17 +166,21 @@ class _DomainsScreenState extends State<DomainsScreen> {
     }
 
     final filteredZones = _zones.where((zone) {
-      return zone['name'].toString().toLowerCase().contains(_searchQuery.toLowerCase());
+      return zone['name']
+          .toString()
+          .toLowerCase()
+          .contains(_searchQuery.toLowerCase());
     }).toList();
 
     return RefreshIndicator(
       onRefresh: _loadZones,
-      child: filteredZones.isEmpty 
+      child: filteredZones.isEmpty
           ? ListView(
               children: const [
                 Padding(
                   padding: EdgeInsets.only(top: 100),
-                  child: Center(child: Text('Nenhum domínio corresponde à pesquisa.')),
+                  child: Center(
+                      child: Text('Nenhum domínio corresponde à pesquisa.')),
                 )
               ],
             )
@@ -183,30 +189,32 @@ class _DomainsScreenState extends State<DomainsScreen> {
               itemBuilder: (context, index) {
                 final zone = filteredZones[index];
                 final isActive = zone['status'] == 'active';
-          
-          return Card(
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: ListTile(
-              title: Text(zone['name'], style: const TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Text(zone['status']),
-              trailing: Icon(
-                isActive ? Icons.check_circle : Icons.pending,
-                color: isActive ? AppColors.success : Colors.grey,
-              ),
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => DnsEditorScreen(
-                      zoneId: zone['id'],
-                      zoneName: zone['name'],
+
+                return Card(
+                  margin:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: ListTile(
+                    title: Text(zone['name'],
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text(zone['status']),
+                    trailing: Icon(
+                      isActive ? Icons.check_circle : Icons.pending,
+                      color: isActive ? AppColors.success : Colors.grey,
                     ),
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => DnsEditorScreen(
+                            zoneId: zone['id'],
+                            zoneName: zone['name'],
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 );
               },
             ),
-          );
-        },
-      ),
     );
   }
 }

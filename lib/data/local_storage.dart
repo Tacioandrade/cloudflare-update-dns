@@ -6,18 +6,18 @@ class LocalStorage {
   static const String _keyAppPassword = 'app_password';
   static const String _keyDnsTypes = 'dns_types';
   static const String _keyThemeMode = 'theme_mode';
+  static bool _authenticatedInCurrentSession = false;
 
   static Future<bool> isAuthenticated() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_keyAuth) ?? false;
+    return _authenticatedInCurrentSession;
   }
 
   static Future<void> login() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_keyAuth, true);
+    _authenticatedInCurrentSession = true;
   }
 
   static Future<void> logout() async {
+    _authenticatedInCurrentSession = false;
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_keyAuth);
   }

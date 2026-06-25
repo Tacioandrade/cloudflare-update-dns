@@ -4,6 +4,10 @@ Projeto no GitHub: [https://github.com/Tacioandrade/cloudflare-update-dns/](http
 
 Todas as alterações notáveis neste projeto serão documentadas neste arquivo.
 
+## [1.0.8] - 2026-06-24
+### Corrigido
+- Forçado o logout da aplicação ao fechar e reabrir o app, exigindo novo login em todos os sistemas operacionais.
+
 ## [1.0.7] - 2026-06-24
 ### Adicionado / Corrigido
 - Adicionado suporte a tema claro e escuro com detecção automática do tema configurado no sistema operacional.
