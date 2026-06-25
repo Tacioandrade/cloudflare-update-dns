@@ -1,9 +1,17 @@
 # This is a generated file; do not edit or check into version control.
 flutter_plugin_android_lifecycle=/root/.pub-cache/hosted/pub.dev/flutter_plugin_android_lifecycle-2.0.22/
+flutter_secure_storage=/root/.pub-cache/hosted/pub.dev/flutter_secure_storage-9.2.4/
+flutter_secure_storage_linux=/root/.pub-cache/hosted/pub.dev/flutter_secure_storage_linux-1.2.3/
+flutter_secure_storage_macos=/root/.pub-cache/hosted/pub.dev/flutter_secure_storage_macos-3.1.3/
+flutter_secure_storage_web=/root/.pub-cache/hosted/pub.dev/flutter_secure_storage_web-1.2.1/
+flutter_secure_storage_windows=/root/.pub-cache/hosted/pub.dev/flutter_secure_storage_windows-3.1.2/
 local_auth=/root/.pub-cache/hosted/pub.dev/local_auth-2.3.0/
 local_auth_android=/root/.pub-cache/hosted/pub.dev/local_auth_android-1.0.43/
 local_auth_darwin=/root/.pub-cache/hosted/pub.dev/local_auth_darwin-1.4.3/
 local_auth_windows=/root/.pub-cache/hosted/pub.dev/local_auth_windows-1.0.11/
+path_provider=/root/.pub-cache/hosted/pub.dev/path_provider-2.1.5/
+path_provider_android=/root/.pub-cache/hosted/pub.dev/path_provider_android-2.2.10/
+path_provider_foundation=/root/.pub-cache/hosted/pub.dev/path_provider_foundation-2.4.1/
 path_provider_linux=/root/.pub-cache/hosted/pub.dev/path_provider_linux-2.2.1/
 path_provider_windows=/root/.pub-cache/hosted/pub.dev/path_provider_windows-2.3.0/
 shared_preferences=/root/.pub-cache/hosted/pub.dev/shared_preferences-2.3.3/

@@ -49,6 +49,7 @@ build\windows\x64\runner\Release\cloudflare_dns.exe
 - Runner nativo: `windows/runner/`.
 - Icone do executavel: `windows/runner/resources/app_icon.ico`.
 - Biometria: `local_auth_windows`, usando Windows Hello quando disponivel.
+- Segredos locais: `flutter_secure_storage_windows`.
 
 ## Toolchain no Container
 

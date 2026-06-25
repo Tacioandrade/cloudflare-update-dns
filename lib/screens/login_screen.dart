@@ -75,8 +75,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _login() async {
-    final expectedPassword = await LocalStorage.getAppPassword();
-    if (expectedPassword != null && _passController.text == expectedPassword) {
+    if (await LocalStorage.verifyAppPassword(_passController.text)) {
       await LocalStorage.login();
       if (mounted) {
         Navigator.of(context).pushReplacement(

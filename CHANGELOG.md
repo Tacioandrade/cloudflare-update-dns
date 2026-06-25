@@ -4,6 +4,17 @@ Projeto no GitHub: [https://github.com/Tacioandrade/cloudflare-update-dns/](http
 
 Todas as alterações notáveis neste projeto serão documentadas neste arquivo.
 
+## [1.1.0] - 2026-06-25
+### Adicionado
+- Adicionada documentação e fluxo de build/testes para a versão Windows.
+- Adicionada documentação e fluxo de build/testes para a versão Linux.
+
+### Segurança
+- Alterado o armazenamento do Cloudflare API Token para `flutter_secure_storage`, usando o armazenamento seguro nativo de cada plataforma.
+- Alterado o armazenamento da senha do app para hash PBKDF2-HMAC-SHA256 com salt aleatório no armazenamento seguro, removendo a persistência da senha em texto claro.
+- Mantida a sessão autenticada apenas em memória, exigindo novo login ao reabrir o aplicativo.
+- Mantidas em `shared_preferences` apenas configurações não sensíveis, como tema e tipos de registros DNS.
+
 ## [1.0.8] - 2026-06-24
 ### Corrigido
 - Forçado o logout da aplicação ao fechar e reabrir o app, exigindo novo login em todos os sistemas operacionais.

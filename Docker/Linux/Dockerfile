@@ -6,6 +6,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     clang \
     cmake \
     libgtk-3-dev \
+    libsecret-1-dev \
     liblzma-dev \
     ninja-build \
     pkg-config \

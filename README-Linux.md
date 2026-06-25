@@ -45,7 +45,8 @@ Para executar depois do build:
 - Docker dedicado: `Docker/Linux/Dockerfile`.
 - Compose dedicado: `Docker/Linux/docker-compose.yml`.
 - Icone e nome da janela sao aplicados pelo runner GTK em `linux/runner/my_application.cc`.
-- Plugins Linux usados pelo projeto incluem `shared_preferences_linux` e `url_launcher_linux`.
+- Plugins Linux usados pelo projeto incluem `shared_preferences_linux`, `flutter_secure_storage_linux` e `url_launcher_linux`.
+- O armazenamento seguro usa `libsecret`; por isso o pacote `libsecret-1-0` e necessario em runtime e `libsecret-1-dev` em build.
 
 ## Sessao
 

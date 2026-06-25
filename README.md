@@ -25,7 +25,7 @@ Este README contem as informacoes compartilhadas entre as plataformas. Para coma
 
 No primeiro acesso, o aplicativo abre a tela de criacao de senha. Depois disso, cada nova execucao do app exige login novamente.
 
-A sessao autenticada fica apenas em memoria. Senha do app, token da Cloudflare, tema e configuracoes de DNS continuam salvos localmente.
+A sessao autenticada fica apenas em memoria. A senha do app nao e salva em texto claro; o app armazena apenas um hash PBKDF2-HMAC-SHA256 com salt aleatorio no armazenamento seguro da plataforma. O token da Cloudflare tambem fica no armazenamento seguro. Tema e configuracoes de DNS continuam salvos localmente em preferencias comuns.
 
 ## Cloudflare API Token
 
@@ -43,7 +43,8 @@ Para usar a limpeza de Cache CDN, crie um token customizado com as seguintes per
 ## Arquitetura
 
 - Framework: Flutter / Dart
-- Estado local: `shared_preferences`
+- Estado local nao sensivel: `shared_preferences`
+- Segredos locais: `flutter_secure_storage`
 - Autenticacao biometrica: `local_auth`, quando suportado pela plataforma
 - Comunicacao de rede: `http`
 - Abertura de links externos: `url_launcher`

@@ -99,8 +99,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _changePassword() async {
-    final currentPass = await LocalStorage.getAppPassword();
-    if (currentPass == null || _currentPassController.text != currentPass) {
+    if (!await LocalStorage.verifyAppPassword(_currentPassController.text)) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
