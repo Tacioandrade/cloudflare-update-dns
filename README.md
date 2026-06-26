@@ -55,6 +55,10 @@ Para usar a limpeza de Cache CDN, crie um token customizado com as seguintes per
 - `README-Linux.md`: Documentação do build e detalhes da versão para Linux.
 - `README-Windows.md`: Documentação do build e detalhes da versão para Windows.
 
+## Problemas Conhecidos
+
+- A versao para Windows exige o Microsoft Visual C++ Redistributable 2015-2022 instalado para executar. Sem esse runtime, o Windows pode exibir erro informando a falta das DLLs `MSVCP140.dll`, `VCRUNTIME140.dll` ou `VCRUNTIME140_1.dll`. Instale pelo site oficial da Microsoft: [Latest supported Visual C++ Redistributable downloads](https://learn.microsoft.com/pt-br/cpp/windows/latest-supported-vc-redist).
+
 ## Licenca
 
 MIT
