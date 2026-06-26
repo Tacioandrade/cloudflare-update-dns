@@ -98,7 +98,11 @@ class ApiService {
       body: jsonEncode(data),
     );
     final json = jsonDecode(response.body);
-    if (!json['success']) throw Exception('Failed to create record');
+    if (!json['success']) {
+      throw Exception(
+        'Falha ao criar registro: ${_formatCloudflareErrors(json)}',
+      );
+    }
   }
 
   static Future<void> updateDnsRecord(
@@ -109,7 +113,11 @@ class ApiService {
       body: jsonEncode(data),
     );
     final json = jsonDecode(response.body);
-    if (!json['success']) throw Exception('Failed to update record');
+    if (!json['success']) {
+      throw Exception(
+        'Falha ao atualizar registro: ${_formatCloudflareErrors(json)}',
+      );
+    }
   }
 
   static Future<void> deleteDnsRecord(String zoneId, String recordId) async {
@@ -136,5 +144,23 @@ class ApiService {
       }
       throw Exception('Failed to purge cache: ${json['errors']}');
     }
+  }
+
+  static String _formatCloudflareErrors(Map<String, dynamic> json) {
+    final errors = json['errors'];
+    if (errors is List && errors.isNotEmpty) {
+      return errors.map((error) {
+        if (error is Map<String, dynamic>) {
+          final code = error['code'];
+          final message = error['message'];
+          if (code != null && message != null) {
+            return '$message (código $code)';
+          }
+          if (message != null) return message.toString();
+        }
+        return error.toString();
+      }).join('; ');
+    }
+    return 'erro desconhecido da API Cloudflare';
   }
 }

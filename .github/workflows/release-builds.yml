@@ -1,0 +1,155 @@
+name: Build and Release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  detect-version:
+    name: Detect release version
+    runs-on: ubuntu-latest
+    outputs:
+      should_release: ${{ steps.version.outputs.should_release }}
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Read commit message
+        id: version
+        env:
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+        run: |
+          python3 - <<'PY'
+          import os
+          import re
+
+          message = os.environ["COMMIT_MESSAGE"].splitlines()[0].strip()
+          match = re.match(r"(?i)^vers[aã]o\s+([0-9]+\.[0-9]+\.[0-9]+)\b", message)
+
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              if match:
+                  output.write("should_release=true\n")
+                  output.write(f"version={match.group(1)}\n")
+              else:
+                  output.write("should_release=false\n")
+                  output.write("version=\n")
+          PY
+
+  build-linux:
+    name: Build Linux bundle
+    needs: detect-version
+    if: needs.detect-version.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            clang \
+            cmake \
+            libgtk-3-dev \
+            libsecret-1-dev \
+            liblzma-dev \
+            ninja-build \
+            pkg-config
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.22.0"
+          channel: stable
+          cache: true
+
+      - name: Build Linux
+        run: |
+          flutter config --enable-linux-desktop
+          flutter pub get
+          flutter build linux --release
+
+      - name: Package Linux bundle
+        env:
+          VERSION: ${{ needs.detect-version.outputs.version }}
+        run: |
+          mkdir -p dist
+          tar -C build/linux/x64/release -czf "dist/cloudflare-update-dns-linux-$VERSION.tar.gz" bundle
+
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-bundle
+          path: dist/cloudflare-update-dns-linux-${{ needs.detect-version.outputs.version }}.tar.gz
+          if-no-files-found: error
+
+  build-windows:
+    name: Build Windows bundle
+    needs: detect-version
+    if: needs.detect-version.outputs.should_release == 'true'
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.22.0"
+          channel: stable
+          cache: true
+
+      - name: Build Windows
+        shell: pwsh
+        run: |
+          flutter config --enable-windows-desktop
+          flutter pub get
+          flutter build windows --release
+
+      - name: Package Windows bundle
+        shell: pwsh
+        env:
+          VERSION: ${{ needs.detect-version.outputs.version }}
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          Compress-Archive `
+            -Path build\windows\x64\runner\Release\* `
+            -DestinationPath "dist\cloudflare-update-dns-windows-$env:VERSION.zip" `
+            -Force
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-bundle
+          path: dist/cloudflare-update-dns-windows-${{ needs.detect-version.outputs.version }}.zip
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub release
+    needs:
+      - detect-version
+      - build-linux
+      - build-windows
+    if: needs.detect-version.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.detect-version.outputs.version }}
+        run: |
+          gh release create "$VERSION" dist/* \
+            --target "$GITHUB_SHA" \
+            --title "$VERSION" \
+            --notes-file CHANGELOG.md

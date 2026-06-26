@@ -4,6 +4,18 @@ Projeto no GitHub: [https://github.com/Tacioandrade/cloudflare-update-dns/](http
 
 Todas as alterações notáveis neste projeto serão documentadas neste arquivo.
 
+## [1.1.2] - 2026-06-26
+### Adicionado / Corrigido
+- Adicionada validação do conteúdo informado na criação e edição de registros DNS.
+- Validado IPv4 para registros `A` e IPv6 para registros `AAAA`.
+- Validado formato de domínio para registros `CNAME`, `MX` e `NS`, sem depender de lista fixa de TLDs.
+- Validado formato básico de registros `SRV` e conteúdo não vazio para registros `TXT`.
+- Corrigida a validação de domínio para rejeitar IPs informados em registros `CNAME`, `MX`, `NS` e destino de `SRV`.
+- Corrigida a criação de registros `TXT` como DMARC e DKIM, removendo o envio indevido do campo `proxied` para tipos não proxiáveis.
+- O controle `Proxied` agora aparece apenas para registros `A`, `AAAA` e `CNAME`.
+- Ajustada a mensagem de erro exibida quando a API da Cloudflare rejeita a criação ou atualização de um registro.
+- Ativa o CI/CD do projeto para gerar aplicação para Windows e Linux automaticamente.
+
 ## [1.1.1] - 2026-06-25
 ### Adicionado / Corrigido
 - Ao abrir a aplicação o foco do teclado ficará no campo de senha ou biometria (dependendo do tipo de autenticação configurado).
