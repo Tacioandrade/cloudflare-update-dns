@@ -89,7 +89,7 @@ jobs:
     name: Build Windows bundle
     needs: detect-version
     if: needs.detect-version.outputs.should_release == 'true'
-    runs-on: windows-latest
+    runs-on: windows-2022
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -97,13 +97,13 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.22.0"
           channel: stable
           cache: true
 
       - name: Build Windows
         shell: pwsh
         run: |
+          flutter doctor -v
           flutter config --enable-windows-desktop
           flutter pub get
           flutter build windows --release
