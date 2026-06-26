@@ -76,7 +76,10 @@ jobs:
           VERSION: ${{ needs.detect-version.outputs.version }}
         run: |
           mkdir -p dist
-          tar -C build/linux/x64/release -czf "dist/cloudflare-update-dns-linux-$VERSION.tar.gz" bundle
+          rm -rf package
+          mkdir -p package/cloudflare-update-dns
+          cp -a build/linux/x64/release/bundle/. package/cloudflare-update-dns/
+          tar -C package -czf "dist/cloudflare-update-dns-linux-$VERSION.tar.gz" cloudflare-update-dns
 
       - name: Upload Linux artifact
         uses: actions/upload-artifact@v4
@@ -114,8 +117,49 @@ jobs:
           VERSION: ${{ needs.detect-version.outputs.version }}
         run: |
           New-Item -ItemType Directory -Force -Path dist | Out-Null
+          if (Test-Path package) {
+            Remove-Item -Recurse -Force package
+          }
+          New-Item -ItemType Directory -Force -Path package\cloudflare-update-dns | Out-Null
+          Copy-Item -Path build\windows\x64\runner\Release\* -Destination package\cloudflare-update-dns -Recurse -Force
+
+          $runtimeDlls = @("msvcp140.dll", "vcruntime140.dll", "vcruntime140_1.dll")
+          $redistRoots = @()
+          if ($env:VCToolsRedistDir) {
+            $redistRoots += $env:VCToolsRedistDir
+          }
+
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          if (Test-Path $vswhere) {
+            $vsInstallPath = & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+            if ($vsInstallPath) {
+              $redistRoots += Join-Path $vsInstallPath "VC\Redist\MSVC"
+            }
+          }
+
+          foreach ($dll in $runtimeDlls) {
+            $source = $null
+            foreach ($root in $redistRoots) {
+              if (-not (Test-Path $root)) {
+                continue
+              }
+              $source = Get-ChildItem -Path $root -Recurse -Filter $dll -ErrorAction SilentlyContinue |
+                Where-Object { $_.FullName -match "\\x64\\Microsoft\\.VC.*\\.CRT\\" } |
+                Select-Object -First 1
+              if ($source) {
+                break
+              }
+            }
+
+            if ($source) {
+              Copy-Item -Path $source.FullName -Destination package\cloudflare-update-dns -Force
+            } else {
+              Write-Warning "Could not find $dll in Visual Studio redistributable directories."
+            }
+          }
+
           Compress-Archive `
-            -Path build\windows\x64\runner\Release\* `
+            -Path package\cloudflare-update-dns `
             -DestinationPath "dist\cloudflare-update-dns-windows-$env:VERSION.zip" `
             -Force
 
@@ -144,6 +188,33 @@ jobs:
           path: dist
           merge-multiple: true
 
+      - name: Extract current version changelog
+        env:
+          VERSION: ${{ needs.detect-version.outputs.version }}
+        run: |
+          python3 - <<'PY'
+          import os
+          import re
+          import sys
+
+          version = os.environ["VERSION"]
+          with open("CHANGELOG.md", "r", encoding="utf-8") as changelog:
+              content = changelog.read()
+
+          pattern = re.compile(
+              rf"^## \[{re.escape(version)}\].*?(?=^## \[|\Z)",
+              re.MULTILINE | re.DOTALL,
+          )
+          match = pattern.search(content)
+          if not match:
+              print(f"Could not find changelog entry for version {version}", file=sys.stderr)
+              sys.exit(1)
+
+          notes = match.group(0).strip() + "\n"
+          with open("RELEASE_NOTES.md", "w", encoding="utf-8") as output:
+              output.write(notes)
+          PY
+
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -152,4 +223,4 @@ jobs:
           gh release create "$VERSION" dist/* \
             --target "$GITHUB_SHA" \
             --title "$VERSION" \
-            --notes-file CHANGELOG.md
+            --notes-file RELEASE_NOTES.md

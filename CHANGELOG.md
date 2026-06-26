@@ -4,6 +4,11 @@ Projeto no GitHub: [https://github.com/Tacioandrade/cloudflare-update-dns/](http
 
 Todas as alterações notáveis neste projeto serão documentadas neste arquivo.
 
+## [1.1.3] - 2026-06-26
+### Corrigido
+- Corrigido bug de execução na versão para Windows relacionado à ausência do Microsoft Visual C++ Runtime.
+- Corrigidos ajustes de CI/CD do projeto para publicar apenas o changelog da versão atual e empacotar os bundles Windows e Linux dentro da pasta `cloudflare-update-dns`.
+
 ## [1.1.2] - 2026-06-26
 ### Adicionado / Corrigido
 - Adicionada validação do conteúdo informado na criação e edição de registros DNS.
