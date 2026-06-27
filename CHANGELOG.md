@@ -4,6 +4,11 @@ Projeto no GitHub: [https://github.com/Tacioandrade/cloudflare-update-dns/](http
 
 Todas as alterações notáveis neste projeto serão documentadas neste arquivo.
 
+## [1.1.4] - 2026-06-27
+### Adicionado / Alterado
+- Renomeado o projeto de Cloudflare Update DNS para Cloudflare DNS Manager.
+- Adicionado atalho de teclado `Ctrl + N` para abrir a criação de um novo registro DNS.
+
 ## [1.1.3] - 2026-06-26
 ### Corrigido
 - Corrigido bug de execução na versão para Windows relacionado à ausência do Microsoft Visual C++ Runtime.

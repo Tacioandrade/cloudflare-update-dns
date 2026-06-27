@@ -79,13 +79,72 @@ jobs:
           rm -rf package
           mkdir -p package/cloudflare-update-dns
           cp -a build/linux/x64/release/bundle/. package/cloudflare-update-dns/
-          tar -C package -czf "dist/cloudflare-update-dns-linux-$VERSION.tar.gz" cloudflare-update-dns
+          chmod +x package/cloudflare-update-dns/cloudflare_dns
+          cat > package/cloudflare-update-dns/install.sh <<'EOF'
+          #!/usr/bin/env bash
+          set -euo pipefail
+
+          INSTALL_DIR="/opt/cloudflare-update-dns"
+          DESKTOP_FILE="/usr/share/applications/cloudflare-dns-manager.desktop"
+          SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+          if [ "$(id -u)" -ne 0 ]; then
+            echo "Execute este instalador com sudo ou como root."
+            exit 1
+          fi
+
+          mkdir -p "$INSTALL_DIR"
+          cp -a "$SCRIPT_DIR"/. "$INSTALL_DIR"/
+          chmod +x "$INSTALL_DIR/cloudflare_dns"
+          chmod +x "$INSTALL_DIR/install.sh" "$INSTALL_DIR/uninstall.sh"
+
+          cat > "$DESKTOP_FILE" <<DESKTOP
+          [Desktop Entry]
+          Type=Application
+          Name=Cloudflare DNS Manager
+          Exec=$INSTALL_DIR/cloudflare_dns
+          Icon=$INSTALL_DIR/data/flutter_assets/assets/icon.png
+          Terminal=false
+          Categories=Network;Utility;
+          DESKTOP
+
+          chmod 644 "$DESKTOP_FILE"
+
+          if command -v update-desktop-database >/dev/null 2>&1; then
+            update-desktop-database /usr/share/applications >/dev/null 2>&1 || true
+          fi
+
+          echo "Cloudflare DNS Manager instalado em $INSTALL_DIR."
+          EOF
+          cat > package/cloudflare-update-dns/uninstall.sh <<'EOF'
+          #!/usr/bin/env bash
+          set -euo pipefail
+
+          INSTALL_DIR="/opt/cloudflare-update-dns"
+          DESKTOP_FILE="/usr/share/applications/cloudflare-dns-manager.desktop"
+
+          if [ "$(id -u)" -ne 0 ]; then
+            echo "Execute este desinstalador com sudo ou como root."
+            exit 1
+          fi
+
+          rm -f "$DESKTOP_FILE"
+          rm -rf "$INSTALL_DIR"
+
+          if command -v update-desktop-database >/dev/null 2>&1; then
+            update-desktop-database /usr/share/applications >/dev/null 2>&1 || true
+          fi
+
+          echo "Cloudflare DNS Manager removido."
+          EOF
+          chmod +x package/cloudflare-update-dns/install.sh package/cloudflare-update-dns/uninstall.sh
+          tar -C package -czf "dist/cloudflare-dns-manager-linux-$VERSION.tar.gz" cloudflare-update-dns
 
       - name: Upload Linux artifact
         uses: actions/upload-artifact@v4
         with:
           name: linux-bundle
-          path: dist/cloudflare-update-dns-linux-${{ needs.detect-version.outputs.version }}.tar.gz
+          path: dist/cloudflare-dns-manager-linux-${{ needs.detect-version.outputs.version }}.tar.gz
           if-no-files-found: error
 
   build-windows:
@@ -120,8 +179,14 @@ jobs:
           if (Test-Path package) {
             Remove-Item -Recurse -Force package
           }
+          if (Test-Path installer) {
+            Remove-Item -Recurse -Force installer
+          }
+          Remove-Item -Path installer.7z, installer-config.txt -Force -ErrorAction SilentlyContinue
           New-Item -ItemType Directory -Force -Path package\cloudflare-update-dns | Out-Null
+          New-Item -ItemType Directory -Force -Path installer | Out-Null
           Copy-Item -Path build\windows\x64\runner\Release\* -Destination package\cloudflare-update-dns -Recurse -Force
+          Copy-Item -Path windows\runner\resources\app_icon.ico -Destination package\cloudflare-update-dns\app_icon.ico -Force
 
           $runtimeDlls = @("msvcp140.dll", "vcruntime140.dll", "vcruntime140_1.dll")
           $redistRoots = @()
@@ -160,14 +225,102 @@ jobs:
 
           Compress-Archive `
             -Path package\cloudflare-update-dns `
-            -DestinationPath "dist\cloudflare-update-dns-windows-$env:VERSION.zip" `
+            -DestinationPath "dist\cloudflare-dns-manager-windows-$env:VERSION`_portable.zip" `
             -Force
+
+          Copy-Item -Path package\cloudflare-update-dns\* -Destination installer -Recurse -Force
+
+          $installScript = @'
+          $ErrorActionPreference = "Stop"
+
+          $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+          $principal = New-Object Security.Principal.WindowsPrincipal($identity)
+          $isAdmin = $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+          if (-not $isAdmin) {
+            Start-Process `
+              -FilePath "powershell.exe" `
+              -ArgumentList @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "`"$PSCommandPath`"") `
+              -Verb RunAs `
+              -Wait
+            exit
+          }
+
+          $installDir = Join-Path $env:ProgramFiles "Cloudflare DNS Manager"
+          $shortcutPath = "C:\Users\Default\Cloudflare DNS Manager.lnk"
+          $sourceDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+          $exePath = Join-Path $installDir "cloudflare_dns.exe"
+          $iconPath = Join-Path $installDir "app_icon.ico"
+
+          New-Item -ItemType Directory -Force -Path $installDir | Out-Null
+          Copy-Item -Path (Join-Path $sourceDir "*") -Destination $installDir -Recurse -Force
+          Remove-Item -Path (Join-Path $installDir "install.ps1") -Force -ErrorAction SilentlyContinue
+
+          $shell = New-Object -ComObject WScript.Shell
+          $shortcut = $shell.CreateShortcut($shortcutPath)
+          $shortcut.TargetPath = $exePath
+          $shortcut.WorkingDirectory = $installDir
+          $shortcut.IconLocation = $iconPath
+          $shortcut.Description = "Cloudflare DNS Manager"
+          $shortcut.Save()
+          '@
+          Set-Content -Path installer\install.ps1 -Value $installScript -Encoding UTF8
+
+          $sfxConfig = @'
+          ;!@Install@!UTF-8!
+          Title="Cloudflare DNS Manager"
+          RunProgram="powershell.exe -NoProfile -ExecutionPolicy Bypass -File install.ps1"
+          ;!@InstallEnd@!
+          '@
+          Set-Content -Path installer-config.txt -Value $sfxConfig -Encoding UTF8
+
+          $sevenZipCommand = Get-Command 7z.exe -ErrorAction SilentlyContinue
+          if ($sevenZipCommand) {
+            $sevenZip = $sevenZipCommand.Source
+          } else {
+            $sevenZip = "$env:ProgramFiles\7-Zip\7z.exe"
+            if (-not (Test-Path $sevenZip)) {
+              $sevenZip = "${env:ProgramFiles(x86)}\7-Zip\7z.exe"
+            }
+          }
+          if (-not (Test-Path $sevenZip)) {
+            throw "7-Zip executable was not found on the runner."
+          }
+
+          $sfxCandidates = @(
+            "$env:ProgramFiles\7-Zip\7z.sfx",
+            "$env:ProgramFiles\7-Zip\7zCon.sfx",
+            "${env:ProgramFiles(x86)}\7-Zip\7z.sfx",
+            "${env:ProgramFiles(x86)}\7-Zip\7zCon.sfx"
+          )
+          $sfxModule = $sfxCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $sfxModule) {
+            throw "7-Zip SFX module was not found on the runner."
+          }
+
+          Push-Location installer
+          & $sevenZip a -t7z ..\installer.7z .\* | Out-Host
+          Pop-Location
+
+          $installerExe = "dist\cloudflare-dns-manager-windows-$env:VERSION.exe"
+          $output = [System.IO.File]::Create($installerExe)
+          foreach ($file in @($sfxModule, "installer-config.txt", "installer.7z")) {
+            $inputPath = (Resolve-Path $file).ProviderPath
+            $input = [System.IO.File]::OpenRead($inputPath)
+            try {
+              $input.CopyTo($output)
+            } finally {
+              $input.Dispose()
+            }
+          }
+          $output.Dispose()
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
           name: windows-bundle
-          path: dist/cloudflare-update-dns-windows-${{ needs.detect-version.outputs.version }}.zip
+          path: |
+            dist/cloudflare-dns-manager-windows-${{ needs.detect-version.outputs.version }}_portable.zip
+            dist/cloudflare-dns-manager-windows-${{ needs.detect-version.outputs.version }}.exe
           if-no-files-found: error
 
   release:

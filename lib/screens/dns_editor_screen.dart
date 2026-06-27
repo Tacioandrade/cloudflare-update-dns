@@ -317,6 +317,9 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
             _searchFocusNode.requestFocus();
           });
         },
+        const SingleActivator(LogicalKeyboardKey.keyN, control: true): () {
+          _showRecordDialog();
+        },
         const SingleActivator(LogicalKeyboardKey.escape): () {
           if (_isSearching) {
             setState(() {
