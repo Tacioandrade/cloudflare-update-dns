@@ -4,6 +4,10 @@ Projeto no GitHub: [https://github.com/Tacioandrade/cloudflare-update-dns/](http
 
 Todas as alterações notáveis neste projeto serão documentadas neste arquivo.
 
+## [Unreleased]
+### Adicionado / Alterado
+- Preparada a configuração nativa para futuras compilações iOS e macOS, incluindo CocoaPods, permissões e metadados de aplicativo.
+
 ## [2.0.0] - 2026-07-14
 ### Adicionado / Alterado
 - A lista de domínios agora é exibida progressivamente, assim que cada domínio é recebido da API da Cloudflare, sem esperar o término de todas as páginas.

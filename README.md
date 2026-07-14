@@ -9,6 +9,8 @@ Este README contem as informacoes compartilhadas entre as plataformas. Para coma
 - [Android](README-Android.md)
 - [Linux](README-Linux.md)
 - [Windows](README-Windows.md)
+- [iOS](README-iOS.md)
+- [macOS](README-macOS.md)
 
 ## Funcionalidades
 

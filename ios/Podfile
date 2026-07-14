@@ -1,0 +1,28 @@
+platform :ios, '13.0'
+
+ENV['COCOAPODS_DISABLE_STATS'] = 'true'
+
+project 'Runner', {'Debug' => :debug, 'Profile' => :release, 'Release' => :release}
+
+def flutter_root
+  path = File.expand_path(File.join('Flutter', 'Generated.xcconfig'), __dir__)
+  raise "#{path} must exist. Run flutter pub get first." unless File.exist?(path)
+  File.foreach(path) do |line|
+    matches = line.match(/FLUTTER_ROOT\=(.*)/)
+    return matches[1].strip if matches
+  end
+  raise 'FLUTTER_ROOT not found in Generated.xcconfig.'
+end
+
+require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
+flutter_ios_podfile_setup
+
+target 'Runner' do
+  use_frameworks!
+  use_modular_headers!
+  flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+end
+
+post_install do |installer|
+  installer.pods_project.targets.each { |target| flutter_additional_ios_build_settings(target) }
+end
