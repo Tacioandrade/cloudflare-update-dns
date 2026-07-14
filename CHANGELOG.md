@@ -4,6 +4,12 @@ Projeto no GitHub: [https://github.com/Tacioandrade/cloudflare-update-dns/](http
 
 Todas as alterações notáveis neste projeto serão documentadas neste arquivo.
 
+## [2.0.0] - 2026-07-14
+### Adicionado / Alterado
+- A lista de domínios agora é exibida progressivamente, assim que cada domínio é recebido da API da Cloudflare, sem esperar o término de todas as páginas.
+- Adicionado suporte a português, inglês, francês, espanhol, chinês simplificado e japonês, com seleção de idioma persistente e detecção do idioma do sistema.
+- O histórico de versões agora é exibido no idioma escolhido no aplicativo.
+
 ## [1.1.4] - 2026-06-27
 ### Adicionado / Alterado
 - Renomeado o projeto de Cloudflare Update DNS para Cloudflare DNS Manager.

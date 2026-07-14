@@ -3,6 +3,7 @@ import '../core/constants.dart';
 import '../data/local_storage.dart';
 import '../widgets/footer.dart';
 import 'domains_screen.dart';
+import '../l10n/app_localizations.dart';
 
 class PasswordSetupScreen extends StatefulWidget {
   const PasswordSetupScreen({super.key});
@@ -23,8 +24,8 @@ class _PasswordSetupScreenState extends State<PasswordSetupScreen> {
 
     if (password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('A senha não pode ser vazia.'),
+        SnackBar(
+          content: Text(context.l10n.text('passwordEmpty')),
           backgroundColor: AppColors.error,
         ),
       );
@@ -33,8 +34,8 @@ class _PasswordSetupScreenState extends State<PasswordSetupScreen> {
 
     if (password != confirmPassword) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('As senhas não coincidem.'),
+        SnackBar(
+          content: Text(context.l10n.text('passwordMismatch')),
           backgroundColor: AppColors.error,
         ),
       );
@@ -70,8 +71,8 @@ class _PasswordSetupScreenState extends State<PasswordSetupScreen> {
             children: [
               Image.asset('assets/icon.png', width: 100, height: 100),
               const SizedBox(height: 24),
-              const Text(
-                'Criar senha',
+              Text(
+                context.l10n.text('createPassword'),
                 style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 48),
@@ -79,7 +80,7 @@ class _PasswordSetupScreenState extends State<PasswordSetupScreen> {
                 controller: _passwordController,
                 obscureText: _obscurePassword,
                 decoration: InputDecoration(
-                  labelText: 'Senha',
+                  labelText: context.l10n.text('password'),
                   border: const OutlineInputBorder(),
                   prefixIcon: const Icon(Icons.lock),
                   suffixIcon: IconButton(
@@ -101,7 +102,7 @@ class _PasswordSetupScreenState extends State<PasswordSetupScreen> {
                 controller: _confirmPasswordController,
                 obscureText: _obscureConfirmPassword,
                 decoration: InputDecoration(
-                  labelText: 'Confirmar senha',
+                  labelText: context.l10n.text('confirmPassword'),
                   border: const OutlineInputBorder(),
                   prefixIcon: const Icon(Icons.lock_outline),
                   suffixIcon: IconButton(
@@ -128,8 +129,8 @@ class _PasswordSetupScreenState extends State<PasswordSetupScreen> {
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
                   ),
-                  child: const Text(
-                    'SALVAR E ENTRAR',
+                  child: Text(
+                    context.l10n.text('saveAndLogin'),
                     style: TextStyle(fontSize: 16),
                   ),
                 ),

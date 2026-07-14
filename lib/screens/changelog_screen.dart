@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../widgets/footer.dart';
+import '../l10n/app_localizations.dart';
 
 class ChangelogScreen extends StatefulWidget {
   const ChangelogScreen({super.key});
@@ -11,25 +12,42 @@ class ChangelogScreen extends StatefulWidget {
 }
 
 class _ChangelogScreenState extends State<ChangelogScreen> {
+  static final Map<String, String> _changelogCache = {};
   String _changelogContent = '';
   bool _isLoading = true;
+  String? _loadedLanguageCode;
 
   @override
   void initState() {
     super.initState();
-    _loadChangelog();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final languageCode = Localizations.localeOf(context).languageCode;
+    if (_loadedLanguageCode != languageCode) {
+      _loadChangelog();
+    }
   }
 
   Future<void> _loadChangelog() async {
+    final languageCode = Localizations.localeOf(context).languageCode;
+    _loadedLanguageCode = languageCode;
     try {
-      final String content = await rootBundle.loadString('CHANGELOG.md');
+      final content = _changelogCache[languageCode] ??
+          await rootBundle.loadString(
+              'assets/changelog/CHANGELOG_$languageCode.md');
+      _changelogCache[languageCode] = content;
+      if (!mounted || _loadedLanguageCode != languageCode) return;
       setState(() {
         _changelogContent = content;
         _isLoading = false;
       });
     } catch (e) {
+      if (!mounted || _loadedLanguageCode != languageCode) return;
       setState(() {
-        _changelogContent = 'Erro ao carregar o changelog.\nDetalhes: $e';
+        _changelogContent = context.l10n.text('changelogLoadError', values: {'error': '$e'});
         _isLoading = false;
       });
     }
@@ -41,7 +59,7 @@ class _ChangelogScreenState extends State<ChangelogScreen> {
 
     if (!opened && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Não foi possível abrir o link.')),
+        SnackBar(content: Text(context.l10n.text('unableOpenLink'))),
       );
     }
   }
@@ -98,7 +116,7 @@ class _ChangelogScreenState extends State<ChangelogScreen> {
         autofocus: true,
         child: Scaffold(
       appBar: AppBar(
-        title: const Text('Histórico de Versões'),
+        title: Text(context.l10n.text('versionHistory')),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())

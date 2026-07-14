@@ -7,6 +7,7 @@ import 'dns_editor_screen.dart';
 import 'settings_screen.dart';
 import 'login_screen.dart';
 import '../widgets/footer.dart';
+import '../l10n/app_localizations.dart';
 
 class DomainsScreen extends StatefulWidget {
   const DomainsScreen({super.key});
@@ -22,6 +23,7 @@ class _DomainsScreenState extends State<DomainsScreen> {
   String _searchQuery = '';
   bool _isSearching = false;
   final FocusNode _searchFocusNode = FocusNode();
+  int _loadId = 0;
 
   @override
   void dispose() {
@@ -36,29 +38,37 @@ class _DomainsScreenState extends State<DomainsScreen> {
   }
 
   Future<void> _loadZones() async {
+    final loadId = ++_loadId;
     setState(() {
       _isLoading = true;
       _error = null;
+      _zones = [];
     });
 
     final token = await LocalStorage.getToken();
+    if (!mounted || loadId != _loadId) return;
+
     if (token == null || token.isEmpty) {
       setState(() {
         _isLoading = false;
-        _error = 'Token não configurado. Vá em Configurações.';
+        _error = context.l10n.text('tokenNotConfigured');
       });
       return;
     }
 
     try {
-      final zones = await ApiService.listZones();
-      setState(() {
-        _zones = zones;
-        _isLoading = false;
-      });
+      await for (final zone in ApiService.streamZones()) {
+        if (!mounted || loadId != _loadId) return;
+        setState(() {
+          _zones.add(zone);
+        });
+      }
+      if (!mounted || loadId != _loadId) return;
+      setState(() => _isLoading = false);
     } catch (e) {
+      if (!mounted || loadId != _loadId) return;
       setState(() {
-        _error = 'Erro ao carregar domínios: $e';
+        _error = context.l10n.text('domainsLoadError', values: {'error': '$e'});
         _isLoading = false;
       });
     }
@@ -104,8 +114,8 @@ class _DomainsScreenState extends State<DomainsScreen> {
             ? TextField(
                 focusNode: _searchFocusNode,
                 autofocus: true,
-                decoration: const InputDecoration(
-                  hintText: 'Pesquisar domínio...',
+                decoration: InputDecoration(
+                  hintText: context.l10n.text('searchDomain'),
                   border: InputBorder.none,
                 ),
                 onChanged: (val) {
@@ -114,7 +124,7 @@ class _DomainsScreenState extends State<DomainsScreen> {
                   });
                 },
               )
-            : const Text('Domínios'),
+            : Text(context.l10n.text('domains')),
         actions: [
           IconButton(
             icon: Icon(_isSearching ? Icons.close : Icons.search),
@@ -154,11 +164,11 @@ class _DomainsScreenState extends State<DomainsScreen> {
   }
 
   Widget _buildBody() {
-    if (_isLoading) {
+    if (_isLoading && _zones.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (_error != null) {
+    if (_error != null && _zones.isEmpty) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -177,7 +187,7 @@ class _DomainsScreenState extends State<DomainsScreen> {
                     );
                     _loadZones();
                   },
-                  child: const Text('Configurar Token'),
+                  child: Text(context.l10n.text('configureToken')),
                 ),
             ],
           ),
@@ -185,14 +195,33 @@ class _DomainsScreenState extends State<DomainsScreen> {
       );
     }
 
+    return Column(
+      children: [
+        if (_isLoading) const LinearProgressIndicator(),
+        if (_error != null)
+          Container(
+            width: double.infinity,
+            color: AppColors.error.withOpacity(0.1),
+            padding: const EdgeInsets.all(12),
+            child: Text(
+              context.l10n.text('partialDomainsError', values: {'error': _error!}),
+              style: const TextStyle(color: AppColors.error),
+            ),
+          ),
+        Expanded(child: _buildZonesList()),
+      ],
+    );
+  }
+
+  Widget _buildZonesList() {
     if (_zones.isEmpty) {
       return RefreshIndicator(
         onRefresh: _loadZones,
         child: ListView(
-          children: const [
+          children: [
             Padding(
-              padding: EdgeInsets.only(top: 100),
-              child: Center(child: Text('Nenhum domínio encontrado.')),
+              padding: const EdgeInsets.only(top: 100),
+              child: Center(child: Text(context.l10n.text('noDomains'))),
             )
           ],
         ),
@@ -210,11 +239,11 @@ class _DomainsScreenState extends State<DomainsScreen> {
       onRefresh: _loadZones,
       child: filteredZones.isEmpty
           ? ListView(
-              children: const [
+              children: [
                 Padding(
-                  padding: EdgeInsets.only(top: 100),
+                  padding: const EdgeInsets.only(top: 100),
                   child: Center(
-                      child: Text('Nenhum domínio corresponde à pesquisa.')),
+                      child: Text(context.l10n.text('noDomainsSearch'))),
                 )
               ],
             )

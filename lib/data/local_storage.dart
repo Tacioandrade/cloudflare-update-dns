@@ -12,6 +12,7 @@ class LocalStorage {
   static const String _keyAppPasswordHash = 'app_password_hash';
   static const String _keyDnsTypes = 'dns_types';
   static const String _keyThemeMode = 'theme_mode';
+  static const String _keyLanguage = 'language';
   static const FlutterSecureStorage _secureStorage = FlutterSecureStorage();
   static const String _passwordHashAlgorithm = 'pbkdf2_sha256';
   static const int _passwordHashIterations = 210000;
@@ -81,6 +82,16 @@ class LocalStorage {
   static Future<void> saveThemeMode(String themeMode) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_keyThemeMode, themeMode);
+  }
+
+  static Future<String> getLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_keyLanguage) ?? 'system';
+  }
+
+  static Future<void> saveLanguage(String language) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyLanguage, language);
   }
 
   static String _hashPassword(String password) {
