@@ -21,19 +21,27 @@ Todos los cambios importantes de Cloudflare DNS Manager se documentan en este ar
 - Flujos Windows y Linux documentados; secretos movidos a almacenamiento seguro.
 ## [1.0.8] - 2026-06-24
 - Cierre de sesión obligatorio tras reiniciar la aplicación.
+
 ## [1.0.7] - 2026-06-24
 - Temas claro, oscuro y del sistema; localización de controles Flutter.
+
 ## [1.0.6] - 2026-06-24
 - Limpieza de caché CDN y documentación de permisos requeridos.
+
 ## [1.0.5] - 2026-06-24
 - Creación de contraseña en el primer acceso y eliminación del campo de usuario.
+
 ## [1.0.4] - 2026-06-19
 - Selector de tipos DNS y visualización del changelog en la aplicación.
+
 ## [1.0.3] - 2026-06-19
 - Biometría nativa y edición de subdominios.
+
 ## [1.0.2] - 2026-06-18
 - Paginación automática, identidad visual e iconos estandarizados.
+
 ## [1.0.1] - 2026-06-18
 - Correcciones de build Android, Kotlin, NDK e identificador de aplicación.
+
 ## [1.0.0] - Lanzamiento inicial
 - Gestión DNS Cloudflare para navegador y Android, con tema dinámico.

@@ -75,32 +75,53 @@ class _ChangelogScreenState extends State<ChangelogScreen> {
       decoration: TextDecoration.underline,
     );
 
+    final children = <Widget>[];
+
+    for (var index = 0; index < lines.length; index++) {
+      final line = lines[index];
+      final isVersionHeading = line.startsWith('## [');
+      final nextLineIsVersionHeading =
+          index + 1 < lines.length && lines[index + 1].startsWith('## [');
+
+      // Empty Text widgets do not reserve the same vertical space on every
+      // platform. Use an explicit gap before each version so the changelog
+      // has consistent spacing on Android and Linux.
+      if (line.isEmpty && nextLineIsVersionHeading) {
+        continue;
+      }
+
+      if (isVersionHeading && children.isNotEmpty) {
+        children.add(const SizedBox(height: 24));
+      }
+
+      final linkMatch =
+          RegExp(r'\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)').firstMatch(line);
+
+      if (linkMatch == null) {
+        children.add(Text(line, style: textStyle));
+        continue;
+      }
+
+      final prefix = line.substring(0, linkMatch.start);
+      final label = linkMatch.group(1)!;
+      final url = linkMatch.group(2)!;
+      final suffix = line.substring(linkMatch.end);
+
+      children.add(Wrap(
+        children: [
+          if (prefix.isNotEmpty) Text(prefix, style: textStyle),
+          InkWell(
+            onTap: () => _openExternalLink(url),
+            child: Text(label, style: linkStyle),
+          ),
+          if (suffix.isNotEmpty) Text(suffix, style: textStyle),
+        ],
+      ));
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: lines.map((line) {
-        final linkMatch =
-            RegExp(r'\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)').firstMatch(line);
-
-        if (linkMatch == null) {
-          return Text(line, style: textStyle);
-        }
-
-        final prefix = line.substring(0, linkMatch.start);
-        final label = linkMatch.group(1)!;
-        final url = linkMatch.group(2)!;
-        final suffix = line.substring(linkMatch.end);
-
-        return Wrap(
-          children: [
-            if (prefix.isNotEmpty) Text(prefix, style: textStyle),
-            InkWell(
-              onTap: () => _openExternalLink(url),
-              child: Text(label, style: linkStyle),
-            ),
-            if (suffix.isNotEmpty) Text(suffix, style: textStyle),
-          ],
-        );
-      }).toList(),
+      children: children,
     );
   }
 

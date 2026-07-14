@@ -46,7 +46,6 @@ Todas as alterações notáveis neste projeto serão documentadas neste arquivo.
 ### Adicionado
 - Adicionada documentação e fluxo de build/testes para a versão Windows.
 - Adicionada documentação e fluxo de build/testes para a versão Linux.
-
 ### Segurança
 - Alterado o armazenamento do Cloudflare API Token para `flutter_secure_storage`, usando o armazenamento seguro nativo de cada plataforma.
 - Alterado o armazenamento da senha do app para hash PBKDF2-HMAC-SHA256 com salt aleatório no armazenamento seguro, removendo a persistência da senha em texto claro.
