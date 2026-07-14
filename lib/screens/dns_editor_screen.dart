@@ -5,6 +5,7 @@ import '../data/api.dart';
 import '../data/dns_record_validator.dart';
 import '../data/local_storage.dart';
 import '../widgets/footer.dart';
+import '../l10n/app_localizations.dart';
 
 class DnsEditorScreen extends StatefulWidget {
   final String zoneId;
@@ -58,7 +59,7 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
       setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Erro: $e')));
+            .showSnackBar(SnackBar(content: Text(context.l10n.text('error', values: {'error': '$e'}))));
       }
     }
   }
@@ -75,7 +76,7 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Erro ao atualizar: $e')));
+            .showSnackBar(SnackBar(content: Text(context.l10n.text('updateError', values: {'error': '$e'}))));
       }
     }
   }
@@ -87,7 +88,7 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Erro ao deletar: $e')));
+            .showSnackBar(SnackBar(content: Text(context.l10n.text('deleteError', values: {'error': '$e'}))));
       }
     }
   }
@@ -96,20 +97,18 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Confirme a limpeza do Cache da CDN'),
-        content: const Text(
-          'Limpar o cache pode tornar seu site temporariamente lento, deseja continuar?',
-        ),
+        title: Text(context.l10n.text('purgeConfirmTitle')),
+        content: Text(context.l10n.text('purgeConfirmMessage')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
+            child: Text(context.l10n.text('cancel')),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text(
-              'Limpar',
+            child: Text(
+              context.l10n.text('purge'),
               style: TextStyle(color: Colors.black),
             ),
           ),
@@ -124,8 +123,8 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
       await ApiService.purgeCache(widget.zoneId);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Cache da CDN limpo com sucesso.'),
+          SnackBar(
+            content: Text(context.l10n.text('cachePurged')),
             backgroundColor: AppColors.success,
           ),
         );
@@ -134,7 +133,7 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erro ao limpar cache da CDN: $e'),
+            content: Text(context.l10n.text('purgeError', values: {'error': '$e'})),
             backgroundColor: AppColors.error,
           ),
         );
@@ -215,7 +214,7 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
       } catch (e) {
         if (!mounted) return;
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Erro: $e')));
+            .showSnackBar(SnackBar(content: Text(context.l10n.text('error', values: {'error': '$e'}))));
       }
     }
 
@@ -234,7 +233,7 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
                 autofocus: true,
                 child: AlertDialog(
                   title: Text(
-                      record == null ? 'Novo Registro' : 'Editar Registro'),
+                      record == null ? context.l10n.text('newRecord') : context.l10n.text('editRecord')),
                   content: SingleChildScrollView(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -258,13 +257,13 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
                               }
                             });
                           },
-                          decoration: const InputDecoration(labelText: 'Tipo'),
+                          decoration: InputDecoration(labelText: context.l10n.text('type')),
                         ),
                         TextField(
                           controller: nameController,
                           onSubmitted: (_) => onSave(),
                           decoration: InputDecoration(
-                            labelText: 'Nome (Subdomínio)',
+                            labelText: context.l10n.text('nameSubdomain'),
                             hintText: '@ ou www',
                             suffixText: '.${widget.zoneName}',
                           ),
@@ -272,12 +271,12 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
                         TextField(
                             controller: contentController,
                             onSubmitted: (_) => onSave(),
-                            decoration: const InputDecoration(
-                                labelText: 'Conteúdo (IP ou destino)')),
+                            decoration: InputDecoration(
+                                labelText: context.l10n.text('content'))),
                         if (DnsRecordValidator.isProxiableType(
                             typeController.text))
                           SwitchListTile(
-                            title: const Text('Proxied'),
+                            title: Text(context.l10n.text('proxied')),
                             value: isProxied,
                             onChanged: (val) =>
                                 setStateDialog(() => isProxied = val),
@@ -288,10 +287,10 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
                   actions: [
                     TextButton(
                         onPressed: () => Navigator.pop(context),
-                        child: const Text('Cancelar')),
+                        child: Text(context.l10n.text('cancel'))),
                     ElevatedButton(
                       onPressed: onSave,
-                      child: const Text('Salvar'),
+                      child: Text(context.l10n.text('recordSave')),
                     ),
                   ],
                 ),
@@ -339,8 +338,8 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
                 ? TextField(
                     focusNode: _searchFocusNode,
                     autofocus: true,
-                    decoration: const InputDecoration(
-                      hintText: 'Pesquisar registro...',
+                    decoration: InputDecoration(
+                      hintText: context.l10n.text('searchRecord'),
                       border: InputBorder.none,
                     ),
                     onChanged: (val) {
@@ -352,7 +351,7 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
                 : Text(widget.zoneName),
             actions: [
               IconButton(
-                tooltip: 'Limpar cache da CDN',
+                tooltip: context.l10n.text('purgeCache'),
                 icon: _isPurgingCache
                     ? const SizedBox(
                         width: 20,
@@ -400,11 +399,11 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
 
                       if (filteredRecords.isEmpty) {
                         return ListView(
-                          children: const [
+                          children: [
                             Padding(
-                              padding: EdgeInsets.only(top: 100),
+                              padding: const EdgeInsets.only(top: 100),
                               child: Center(
-                                  child: Text('Nenhum registro encontrado.')),
+                                  child: Text(context.l10n.text('noRecords'))),
                             )
                           ],
                         );
@@ -444,22 +443,21 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
                                       final confirm = await showDialog<bool>(
                                         context: context,
                                         builder: (_) => AlertDialog(
-                                          title:
-                                              const Text('Confirmar exclusão'),
+                                          title: Text(context.l10n.text('deleteConfirmTitle')),
                                           content: Text(
-                                              'Deletar o registro ${record['name']}?'),
+                                              context.l10n.text('deleteRecord', values: {'name': '${record['name']}'})),
                                           actions: [
                                             TextButton(
                                                 onPressed: () => Navigator.pop(
                                                     context, false),
-                                                child: const Text('Cancelar')),
+                                                child: Text(context.l10n.text('cancel'))),
                                             ElevatedButton(
                                               style: ElevatedButton.styleFrom(
                                                   backgroundColor:
                                                       AppColors.error),
                                               onPressed: () =>
                                                   Navigator.pop(context, true),
-                                              child: const Text('Deletar'),
+                                              child: Text(context.l10n.text('delete')),
                                             ),
                                           ],
                                         ),

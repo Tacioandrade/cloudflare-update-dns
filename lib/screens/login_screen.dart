@@ -5,6 +5,7 @@ import '../core/constants.dart';
 import '../data/local_storage.dart';
 import '../widgets/footer.dart';
 import 'domains_screen.dart';
+import '../l10n/app_localizations.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -55,7 +56,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!_supportsBiometricAuth) return;
     try {
       final authenticated = await auth.authenticate(
-        localizedReason: 'Autentique-se para gerenciar seus domínios DNS',
+        localizedReason: context.l10n.text('biometricReason'),
         options: const AuthenticationOptions(
           stickyAuth: true,
           biometricOnly: false,
@@ -85,8 +86,8 @@ class _LoginScreenState extends State<LoginScreen> {
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Credenciais inválidas!'),
+          SnackBar(
+            content: Text(context.l10n.text('credentialsInvalid')),
             backgroundColor: AppColors.error,
           ),
         );
@@ -112,8 +113,8 @@ class _LoginScreenState extends State<LoginScreen> {
             children: [
               Image.asset('assets/icon.png', width: 100, height: 100),
               const SizedBox(height: 24),
-              const Text(
-                'Cloudflare DNS Manager',
+              Text(
+                context.l10n.text('appName'),
                 style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 48),
@@ -129,8 +130,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                     ),
-                    child: const Text(
-                      'ENTRAR COM BIOMETRIA',
+                    child: Text(
+                      context.l10n.text('loginBiometric'),
                       style: TextStyle(fontSize: 16),
                     ),
                   ),
@@ -138,8 +139,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 16),
                 TextButton(
                   onPressed: () => setState(() => _canCheckBiometrics = false),
-                  child: const Text(
-                    'Usar senha ao invés da biometria',
+                  child: Text(
+                    context.l10n.text('usePassword'),
                     style: TextStyle(color: Colors.grey),
                   ),
                 ),
@@ -150,7 +151,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   obscureText: _obscurePassword,
                   onSubmitted: (_) => _login(),
                   decoration: InputDecoration(
-                    labelText: 'Senha',
+                    labelText: context.l10n.text('password'),
                     border: const OutlineInputBorder(),
                     prefixIcon: const Icon(Icons.lock),
                     suffixIcon: IconButton(
@@ -177,7 +178,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                     ),
-                    child: const Text('ENTRAR', style: TextStyle(fontSize: 16)),
+                    child: Text(context.l10n.text('login'), style: const TextStyle(fontSize: 16)),
                   ),
                 ),
               ],

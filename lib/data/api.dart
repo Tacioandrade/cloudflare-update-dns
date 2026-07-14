@@ -16,20 +16,22 @@ class ApiService {
     };
   }
 
-  static Future<List<dynamic>> listZones() async {
-    List<dynamic> allZones = [];
+  static Stream<dynamic> streamZones() async* {
     int page = 1;
     bool hasMore = true;
+    final headers = await _headers();
 
     while (hasMore) {
       final response = await http.get(
         Uri.parse('$baseUrl/zones?per_page=50&page=$page'),
-        headers: await _headers(),
+        headers: headers,
       );
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body);
         if (json['success']) {
-          allZones.addAll(json['result']);
+          for (final zone in json['result']) {
+            yield zone;
+          }
           final resultInfo = json['result_info'];
           if (resultInfo != null && resultInfo['total_pages'] != null) {
             final int totalPages = resultInfo['total_pages'];
@@ -48,7 +50,14 @@ class ApiService {
         throw Exception('Failed to load zones. HTTP ${response.statusCode}');
       }
     }
-    return allZones;
+  }
+
+  static Future<List<dynamic>> listZones() async {
+    final zones = <dynamic>[];
+    await for (final zone in streamZones()) {
+      zones.add(zone);
+    }
+    return zones;
   }
 
   static Future<List<dynamic>> listDnsRecords(String zoneId) async {

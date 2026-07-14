@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../l10n/app_localizations.dart';
 
 class AppFooter extends StatelessWidget {
   const AppFooter({super.key});
@@ -13,7 +14,7 @@ class AppFooter extends StatelessWidget {
 
     if (!opened && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Não foi possível abrir o site.')),
+        SnackBar(content: Text(context.l10n.text('unableOpenWebsite'))),
       );
     }
   }
@@ -29,7 +30,7 @@ class AppFooter extends StatelessWidget {
           text: TextSpan(
             style: const TextStyle(color: Colors.grey, fontSize: 12),
             children: [
-              const TextSpan(text: 'Desenvolvido por '),
+              TextSpan(text: context.l10n.text('developedBy')),
               TextSpan(
                 text: 'MultiTI Consultoria & Soluções em Tecnologia',
                 style: const TextStyle(

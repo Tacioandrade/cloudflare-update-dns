@@ -42,4 +42,12 @@ void main() {
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.getString('cf_api_token'), isNull);
   });
+
+  test('language preference is stored in shared preferences', () async {
+    expect(await LocalStorage.getLanguage(), 'system');
+
+    await LocalStorage.saveLanguage('ja');
+
+    expect(await LocalStorage.getLanguage(), 'ja');
+  });
 }
