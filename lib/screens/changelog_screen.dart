@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../widgets/footer.dart';
 import '../l10n/app_localizations.dart';
 
 class ChangelogScreen extends StatefulWidget {
@@ -145,7 +144,6 @@ class _ChangelogScreenState extends State<ChangelogScreen> {
               padding: const EdgeInsets.all(24.0),
               child: _buildChangelogContent(context),
             ),
-      bottomNavigationBar: const AppFooter(),
         ),
       ),
     );

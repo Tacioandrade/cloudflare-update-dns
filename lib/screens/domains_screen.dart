@@ -6,7 +6,6 @@ import '../data/local_storage.dart';
 import 'dns_editor_screen.dart';
 import 'settings_screen.dart';
 import 'login_screen.dart';
-import '../widgets/footer.dart';
 import '../l10n/app_localizations.dart';
 
 class DomainsScreen extends StatefulWidget {
@@ -157,7 +156,6 @@ class _DomainsScreenState extends State<DomainsScreen> {
         onPressed: _loadZones,
         child: const Icon(Icons.refresh),
       ),
-      bottomNavigationBar: const AppFooter(),
         ),
       ),
     );

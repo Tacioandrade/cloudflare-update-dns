@@ -5,7 +5,6 @@ import '../core/app_language.dart';
 import '../core/constants.dart';
 import '../data/local_storage.dart';
 import '../data/api.dart';
-import '../widgets/footer.dart';
 import 'changelog_screen.dart';
 import '../l10n/app_localizations.dart';
 
@@ -422,7 +421,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: const AppFooter(),
         ),
       ),
     );

@@ -9,6 +9,7 @@ Todas as alterações notáveis neste projeto serão documentadas neste arquivo.
 - A lista de domínios agora é exibida progressivamente, assim que cada domínio é recebido da API da Cloudflare, sem esperar o término de todas as páginas.
 - Adicionado suporte a português, inglês, francês, espanhol, chinês simplificado e japonês, com seleção de idioma persistente e detecção do idioma do sistema.
 - O histórico de versões agora é exibido no idioma escolhido no aplicativo.
+- Removido o rodapé institucional das telas da aplicação.
 
 ## [1.1.4] - 2026-06-27
 ### Adicionado / Alterado

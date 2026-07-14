@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart';
 import 'package:local_auth/local_auth.dart';
 import '../core/constants.dart';
 import '../data/local_storage.dart';
-import '../widgets/footer.dart';
 import 'domains_screen.dart';
 import '../l10n/app_localizations.dart';
 
@@ -104,7 +103,6 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      bottomNavigationBar: const AppFooter(),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),

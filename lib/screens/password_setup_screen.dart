@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../core/constants.dart';
 import '../data/local_storage.dart';
-import '../widgets/footer.dart';
 import 'domains_screen.dart';
 import '../l10n/app_localizations.dart';
 
@@ -62,7 +61,6 @@ class _PasswordSetupScreenState extends State<PasswordSetupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      bottomNavigationBar: const AppFooter(),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),

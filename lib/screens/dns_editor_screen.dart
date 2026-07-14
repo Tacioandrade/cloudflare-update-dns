@@ -4,7 +4,6 @@ import '../core/constants.dart';
 import '../data/api.dart';
 import '../data/dns_record_validator.dart';
 import '../data/local_storage.dart';
-import '../widgets/footer.dart';
 import '../l10n/app_localizations.dart';
 
 class DnsEditorScreen extends StatefulWidget {
@@ -480,7 +479,6 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
             onPressed: () => _showRecordDialog(),
             child: const Icon(Icons.add),
           ),
-          bottomNavigationBar: const AppFooter(),
         ),
       ),
     );
