@@ -56,7 +56,8 @@ jobs:
             libsecret-1-dev \
             liblzma-dev \
             ninja-build \
-            pkg-config
+            pkg-config \
+            rpm
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -94,7 +95,10 @@ jobs:
           fi
 
           mkdir -p "$INSTALL_DIR"
-          cp -a "$SCRIPT_DIR"/. "$INSTALL_DIR"/
+          if ! cp -a "$SCRIPT_DIR"/. "$INSTALL_DIR"/; then
+            echo "Não foi possível instalar a aplicação, provavelmente ela está em execução no momento."
+            exit 1
+          fi
           chmod +x "$INSTALL_DIR/cloudflare_dns"
           chmod +x "$INSTALL_DIR/install.sh" "$INSTALL_DIR/uninstall.sh"
 
@@ -129,7 +133,10 @@ jobs:
           fi
 
           rm -f "$DESKTOP_FILE"
-          rm -rf "$INSTALL_DIR"
+          if ! rm -rf "$INSTALL_DIR"; then
+            echo "Não foi possível remover a aplicação, provavelmente ela está em execução no momento."
+            exit 1
+          fi
 
           if command -v update-desktop-database >/dev/null 2>&1; then
             update-desktop-database /usr/share/applications >/dev/null 2>&1 || true
@@ -140,11 +147,139 @@ jobs:
           chmod +x package/cloudflare-update-dns/install.sh package/cloudflare-update-dns/uninstall.sh
           tar -C package -czf "dist/cloudflare-dns-manager-linux-$VERSION.tar.gz" cloudflare-update-dns
 
+          mkdir -p package/deb/DEBIAN
+          mkdir -p package/deb/opt/cloudflare-update-dns
+          mkdir -p package/deb/usr/share/applications
+          cp -a package/cloudflare-update-dns/. package/deb/opt/cloudflare-update-dns/
+          cat > package/deb/usr/share/applications/cloudflare-dns-manager.desktop <<'EOF'
+          [Desktop Entry]
+          Type=Application
+          Name=Cloudflare DNS Manager
+          Exec=/opt/cloudflare-update-dns/cloudflare_dns
+          Icon=/opt/cloudflare-update-dns/data/flutter_assets/assets/icon.png
+          Terminal=false
+          Categories=Network;Utility;
+          EOF
+          cat > package/deb/DEBIAN/control <<EOF
+          Package: cloudflare-dns-manager
+          Version: $VERSION
+          Section: utils
+          Priority: optional
+          Architecture: amd64
+          Maintainer: Tacio Andrade
+          Depends: libgtk-3-0, libsecret-1-0, liblzma5
+          Description: Cloudflare DNS Manager
+           Aplicativo Flutter para gerenciamento de registros DNS via Cloudflare API.
+          EOF
+          cat > package/deb/DEBIAN/preinst <<'EOF'
+          #!/usr/bin/env bash
+          set -euo pipefail
+
+          if pgrep -f "/opt/cloudflare-update-dns/cloudflare_dns" >/dev/null 2>&1; then
+            echo "Não foi possível instalar a aplicação, provavelmente ela está em execução no momento."
+            exit 1
+          fi
+          EOF
+          cat > package/deb/DEBIAN/postinst <<'EOF'
+          #!/usr/bin/env bash
+          set -euo pipefail
+
+          chmod +x /opt/cloudflare-update-dns/cloudflare_dns
+          chmod +x /opt/cloudflare-update-dns/install.sh /opt/cloudflare-update-dns/uninstall.sh
+
+          if command -v update-desktop-database >/dev/null 2>&1; then
+            update-desktop-database /usr/share/applications >/dev/null 2>&1 || true
+          fi
+          EOF
+          cat > package/deb/DEBIAN/prerm <<'EOF'
+          #!/usr/bin/env bash
+          set -euo pipefail
+
+          if pgrep -f "/opt/cloudflare-update-dns/cloudflare_dns" >/dev/null 2>&1; then
+            echo "Não foi possível remover a aplicação, provavelmente ela está em execução no momento."
+            exit 1
+          fi
+          EOF
+          cat > package/deb/DEBIAN/postrm <<'EOF'
+          #!/usr/bin/env bash
+          set -euo pipefail
+
+          if command -v update-desktop-database >/dev/null 2>&1; then
+            update-desktop-database /usr/share/applications >/dev/null 2>&1 || true
+          fi
+          EOF
+          chmod 755 package/deb/DEBIAN/preinst package/deb/DEBIAN/postinst package/deb/DEBIAN/prerm package/deb/DEBIAN/postrm
+          dpkg-deb --build package/deb "dist/cloudflare-dns-manager-linux-$VERSION.deb"
+
+          rpm_root="$PWD/package/rpmroot"
+          rpm_topdir="$PWD/package/rpmbuild"
+          mkdir -p "$rpm_root/opt/cloudflare-update-dns"
+          mkdir -p "$rpm_root/usr/share/applications"
+          mkdir -p "$rpm_topdir/BUILD" "$rpm_topdir/BUILDROOT" "$rpm_topdir/RPMS" "$rpm_topdir/SOURCES" "$rpm_topdir/SPECS" "$rpm_topdir/SRPMS"
+          cp -a package/cloudflare-update-dns/. "$rpm_root/opt/cloudflare-update-dns/"
+          cp package/deb/usr/share/applications/cloudflare-dns-manager.desktop "$rpm_root/usr/share/applications/cloudflare-dns-manager.desktop"
+          tar -C "$rpm_root" -czf "$rpm_topdir/SOURCES/cloudflare-dns-manager-$VERSION.tar.gz" .
+          cat > "$rpm_topdir/SPECS/cloudflare-dns-manager.spec" <<EOF
+          Name: cloudflare-dns-manager
+          Version: $VERSION
+          Release: 1%{?dist}
+          Summary: Cloudflare DNS Manager
+          License: MIT
+          URL: https://github.com/Tacioandrade/cloudflare-update-dns
+          Source0: %{name}-%{version}.tar.gz
+          Requires: gtk3
+          Requires: libsecret
+
+          %description
+          Aplicativo Flutter para gerenciamento de registros DNS via Cloudflare API.
+
+          %prep
+          %setup -q -c -T
+          tar -xzf %{SOURCE0}
+
+          %install
+          mkdir -p %{buildroot}
+          cp -a * %{buildroot}/
+
+          %pre
+          if pgrep -f "/opt/cloudflare-update-dns/cloudflare_dns" >/dev/null 2>&1; then
+            echo "Não foi possível instalar a aplicação, provavelmente ela está em execução no momento."
+            exit 1
+          fi
+
+          %post
+          chmod +x /opt/cloudflare-update-dns/cloudflare_dns
+          chmod +x /opt/cloudflare-update-dns/install.sh /opt/cloudflare-update-dns/uninstall.sh
+          if command -v update-desktop-database >/dev/null 2>&1; then
+            update-desktop-database /usr/share/applications >/dev/null 2>&1 || true
+          fi
+
+          %preun
+          if pgrep -f "/opt/cloudflare-update-dns/cloudflare_dns" >/dev/null 2>&1; then
+            echo "Não foi possível remover a aplicação, provavelmente ela está em execução no momento."
+            exit 1
+          fi
+
+          %postun
+          if command -v update-desktop-database >/dev/null 2>&1; then
+            update-desktop-database /usr/share/applications >/dev/null 2>&1 || true
+          fi
+
+          %files
+          /opt/cloudflare-update-dns
+          /usr/share/applications/cloudflare-dns-manager.desktop
+          EOF
+          rpmbuild --define "_topdir $rpm_topdir" -bb "$rpm_topdir/SPECS/cloudflare-dns-manager.spec"
+          cp "$rpm_topdir"/RPMS/x86_64/cloudflare-dns-manager-"$VERSION"-*.rpm "dist/cloudflare-dns-manager-linux-$VERSION.rpm"
+
       - name: Upload Linux artifact
         uses: actions/upload-artifact@v4
         with:
           name: linux-bundle
-          path: dist/cloudflare-dns-manager-linux-${{ needs.detect-version.outputs.version }}.tar.gz
+          path: |
+            dist/cloudflare-dns-manager-linux-${{ needs.detect-version.outputs.version }}.tar.gz
+            dist/cloudflare-dns-manager-linux-${{ needs.detect-version.outputs.version }}.deb
+            dist/cloudflare-dns-manager-linux-${{ needs.detect-version.outputs.version }}.rpm
           if-no-files-found: error
 
   build-windows:

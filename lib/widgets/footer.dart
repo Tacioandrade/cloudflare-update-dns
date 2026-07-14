@@ -30,7 +30,6 @@ class AppFooter extends StatelessWidget {
           text: TextSpan(
             style: const TextStyle(color: Colors.grey, fontSize: 12),
             children: [
-              TextSpan(text: context.l10n.text('developedBy')),
               TextSpan(
                 text: 'MultiTI Consultoria & Soluções em Tecnologia',
                 style: const TextStyle(
