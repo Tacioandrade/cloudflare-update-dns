@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../core/constants.dart';
 import '../data/api.dart';
+import '../data/dns_record_filter.dart';
 import '../data/dns_record_validator.dart';
 import '../data/local_storage.dart';
 import '../l10n/app_localizations.dart';
@@ -26,8 +27,14 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
   String _searchQuery = '';
   bool _isSearching = false;
   bool _isPurgingCache = false;
+  bool _areFiltersVisible = false;
   List<String> _allowedTypes = ['A', 'CNAME'];
+  final Set<String> _selectedTypes = {};
+  final Set<bool> _selectedProxyStates = {};
   final FocusNode _searchFocusNode = FocusNode();
+
+  bool get _hasActiveFilters =>
+      _selectedTypes.isNotEmpty || _selectedProxyStates.isNotEmpty;
 
   @override
   void dispose() {
@@ -42,24 +49,261 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
   }
 
   Future<void> _loadTypesAndRecords() async {
-    _allowedTypes = await LocalStorage.getDnsTypes();
-    _loadRecords();
+    final allowedTypes = await LocalStorage.getDnsTypes();
+    if (!mounted) return;
+    setState(() {
+      _allowedTypes = allowedTypes;
+      _selectedTypes.removeWhere((type) => !_allowedTypes.contains(type));
+    });
+    await _loadRecords();
   }
 
   Future<void> _loadRecords() async {
     setState(() => _isLoading = true);
     try {
       final records = await ApiService.listDnsRecords(widget.zoneId);
+      if (!mounted) return;
       setState(() {
         _records = records;
         _isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() => _isLoading = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(context.l10n.text('error', values: {'error': '$e'}))));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(context.l10n.text('error', values: {'error': '$e'}))));
+    }
+  }
+
+  void _toggleTypeFilter(String type, bool selected) {
+    setState(() {
+      if (selected) {
+        _selectedTypes.add(type);
+      } else {
+        _selectedTypes.remove(type);
       }
+    });
+  }
+
+  void _toggleProxyFilter(bool proxyState, bool selected) {
+    setState(() {
+      if (selected) {
+        _selectedProxyStates.add(proxyState);
+      } else {
+        _selectedProxyStates.remove(proxyState);
+      }
+    });
+  }
+
+  void _clearFilters() {
+    setState(() {
+      _selectedTypes.clear();
+      _selectedProxyStates.clear();
+    });
+  }
+
+  Widget _buildFilters() {
+    return Material(
+      color: Theme.of(context).colorScheme.surfaceContainerLow,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(color: Theme.of(context).dividerColor),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.l10n.text('filterByType'),
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                      const SizedBox(height: 4),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: _allowedTypes.map((type) {
+                          return FilterChip(
+                            label: Text(type),
+                            selected: _selectedTypes.contains(type),
+                            selectedColor:
+                                AppColors.primary.withOpacity(0.3),
+                            checkmarkColor: AppColors.primary,
+                            onSelected: (selected) =>
+                                _toggleTypeFilter(type, selected),
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 24),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.l10n.text('filterByProxy'),
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                      const SizedBox(height: 4),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          SizedBox(
+                            width: 132,
+                            child: FilterChip(
+                              label: Text(context.l10n.text('proxyEnabled')),
+                              selected: _selectedProxyStates.contains(true),
+                              selectedColor:
+                                  AppColors.primary.withOpacity(0.3),
+                              checkmarkColor: AppColors.primary,
+                              onSelected: (selected) =>
+                                  _toggleProxyFilter(true, selected),
+                            ),
+                          ),
+                          SizedBox(
+                            width: 132,
+                            child: FilterChip(
+                              label:
+                                  Text(context.l10n.text('proxyDisabled')),
+                              selected: _selectedProxyStates.contains(false),
+                              selectedColor:
+                                  AppColors.primary.withOpacity(0.3),
+                              checkmarkColor: AppColors.primary,
+                              onSelected: (selected) =>
+                                  _toggleProxyFilter(false, selected),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Padding(
+                  padding: const EdgeInsets.only(top: 24),
+                  child: Visibility(
+                    visible: _hasActiveFilters,
+                    maintainAnimation: true,
+                    maintainSize: true,
+                    maintainState: true,
+                    child: TextButton(
+                      onPressed: _clearFilters,
+                      child: Text(context.l10n.text('clearFilters')),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRecordsBody() {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadRecords,
+      child: Builder(
+        builder: (context) {
+          final filteredRecords = DnsRecordFilter.apply(
+            records: _records,
+            searchQuery: _searchQuery,
+            selectedTypes: _selectedTypes,
+            selectedProxyStates: _selectedProxyStates,
+          );
+
+          if (filteredRecords.isEmpty) {
+            return ListView(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 100),
+                  child: Center(child: Text(context.l10n.text('noRecords'))),
+                )
+              ],
+            );
+          }
+
+          return ListView.builder(
+            itemCount: filteredRecords.length,
+            itemBuilder: (context, index) {
+              final record = filteredRecords[index];
+              return Card(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: ListTile(
+                  title: Text(
+                    '${record['type']} • ${record['name']}',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Text(record['content']),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Switch(
+                        value: record['proxied'],
+                        onChanged: record['proxiable']
+                            ? (val) => _toggleProxy(record, val)
+                            : null,
+                        activeColor: AppColors.primary,
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.edit),
+                        onPressed: () => _showRecordDialog(record),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete, color: AppColors.error),
+                        onPressed: () => _confirmDeleteRecord(record),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  Future<void> _confirmDeleteRecord(dynamic record) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text(context.l10n.text('deleteConfirmTitle')),
+        content: Text(context.l10n.text(
+          'deleteRecord',
+          values: {'name': '${record['name']}'},
+        )),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(context.l10n.text('cancel')),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(context.l10n.text('delete')),
+          ),
+        ],
+      ),
+    );
+    if (confirm == true) {
+      _deleteRecord(record['id']);
     }
   }
 
@@ -74,8 +318,9 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
       _loadRecords();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(context.l10n.text('updateError', values: {'error': '$e'}))));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(
+                context.l10n.text('updateError', values: {'error': '$e'}))));
       }
     }
   }
@@ -86,8 +331,9 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
       _loadRecords();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(context.l10n.text('deleteError', values: {'error': '$e'}))));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(
+                context.l10n.text('deleteError', values: {'error': '$e'}))));
       }
     }
   }
@@ -108,7 +354,7 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
             onPressed: () => Navigator.pop(context, true),
             child: Text(
               context.l10n.text('purge'),
-              style: TextStyle(color: Colors.black),
+              style: const TextStyle(color: Colors.black),
             ),
           ),
         ],
@@ -132,7 +378,8 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(context.l10n.text('purgeError', values: {'error': '$e'})),
+            content:
+                Text(context.l10n.text('purgeError', values: {'error': '$e'})),
             backgroundColor: AppColors.error,
           ),
         );
@@ -212,8 +459,9 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
         _loadRecords();
       } catch (e) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(context.l10n.text('error', values: {'error': '$e'}))));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content:
+                Text(context.l10n.text('error', values: {'error': '$e'}))));
       }
     }
 
@@ -231,8 +479,9 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
               child: FocusScope(
                 autofocus: true,
                 child: AlertDialog(
-                  title: Text(
-                      record == null ? context.l10n.text('newRecord') : context.l10n.text('editRecord')),
+                  title: Text(record == null
+                      ? context.l10n.text('newRecord')
+                      : context.l10n.text('editRecord')),
                   content: SingleChildScrollView(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -256,7 +505,8 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
                               }
                             });
                           },
-                          decoration: InputDecoration(labelText: context.l10n.text('type')),
+                          decoration: InputDecoration(
+                              labelText: context.l10n.text('type')),
                         ),
                         TextField(
                           controller: nameController,
@@ -350,6 +600,19 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
                 : Text(widget.zoneName),
             actions: [
               IconButton(
+                tooltip: context.l10n.text('dnsFilters'),
+                icon: Icon(
+                  _areFiltersVisible || _hasActiveFilters
+                      ? Icons.filter_alt
+                      : Icons.filter_alt_outlined,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _areFiltersVisible = !_areFiltersVisible;
+                  });
+                },
+              ),
+              IconButton(
                 tooltip: context.l10n.text('purgeCache'),
                 icon: _isPurgingCache
                     ? const SizedBox(
@@ -374,107 +637,12 @@ class _DnsEditorScreenState extends State<DnsEditorScreen> {
               const SizedBox(width: 16),
             ],
           ),
-          body: _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : RefreshIndicator(
-                  onRefresh: _loadRecords,
-                  child: Builder(
-                    builder: (context) {
-                      final filteredRecords = _records.where((record) {
-                        final search = _searchQuery.toLowerCase();
-                        return record['name']
-                                .toString()
-                                .toLowerCase()
-                                .contains(search) ||
-                            record['content']
-                                .toString()
-                                .toLowerCase()
-                                .contains(search) ||
-                            record['type']
-                                .toString()
-                                .toLowerCase()
-                                .contains(search);
-                      }).toList();
-
-                      if (filteredRecords.isEmpty) {
-                        return ListView(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.only(top: 100),
-                              child: Center(
-                                  child: Text(context.l10n.text('noRecords'))),
-                            )
-                          ],
-                        );
-                      }
-
-                      return ListView.builder(
-                        itemCount: filteredRecords.length,
-                        itemBuilder: (context, index) {
-                          final record = filteredRecords[index];
-                          return Card(
-                            margin: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                            child: ListTile(
-                              title: Text(
-                                  '${record['type']} • ${record['name']}',
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold)),
-                              subtitle: Text(record['content']),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Switch(
-                                    value: record['proxied'],
-                                    onChanged: record['proxiable']
-                                        ? (val) => _toggleProxy(record, val)
-                                        : null,
-                                    activeColor: AppColors.primary,
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.edit),
-                                    onPressed: () => _showRecordDialog(record),
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.delete,
-                                        color: AppColors.error),
-                                    onPressed: () async {
-                                      final confirm = await showDialog<bool>(
-                                        context: context,
-                                        builder: (_) => AlertDialog(
-                                          title: Text(context.l10n.text('deleteConfirmTitle')),
-                                          content: Text(
-                                              context.l10n.text('deleteRecord', values: {'name': '${record['name']}'})),
-                                          actions: [
-                                            TextButton(
-                                                onPressed: () => Navigator.pop(
-                                                    context, false),
-                                                child: Text(context.l10n.text('cancel'))),
-                                            ElevatedButton(
-                                              style: ElevatedButton.styleFrom(
-                                                  backgroundColor:
-                                                      AppColors.error),
-                                              onPressed: () =>
-                                                  Navigator.pop(context, true),
-                                              child: Text(context.l10n.text('delete')),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                      if (confirm == true) {
-                                        _deleteRecord(record['id']);
-                                      }
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      );
-                    },
-                  ),
-                ),
+          body: Column(
+            children: [
+              if (_areFiltersVisible) _buildFilters(),
+              Expanded(child: _buildRecordsBody()),
+            ],
+          ),
           floatingActionButton: FloatingActionButton(
             onPressed: () => _showRecordDialog(),
             child: const Icon(Icons.add),

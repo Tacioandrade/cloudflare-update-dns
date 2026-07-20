@@ -4,6 +4,10 @@ Proyecto en GitHub: [https://github.com/Tacioandrade/cloudflare-update-dns/](htt
 
 Todos los cambios destacables de este proyecto se documentarán en este archivo.
 
+## [2.0.1] - 2026-07-19
+### Añadido
+- Se añadieron filtros combinables por tipo de registro DNS y estado del proxy en la pantalla de registros, utilizando los tipos habilitados en Configuración.
+
 ## [2.0.0] - 2026-07-14
 ### Añadido / Modificado
 - La lista de dominios ahora se muestra progresivamente, tan pronto como cada dominio se recibe de la API de Cloudflare, sin esperar a que terminen todas las páginas.
