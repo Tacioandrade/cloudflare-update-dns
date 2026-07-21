@@ -5,6 +5,7 @@ import '../core/app_language.dart';
 import '../core/constants.dart';
 import '../data/local_storage.dart';
 import '../data/api.dart';
+import '../data/update_checker.dart';
 import 'changelog_screen.dart';
 import '../l10n/app_localizations.dart';
 
@@ -28,6 +29,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   String _themeMode = AppThemeController.systemValue;
   String _language = AppLanguageController.systemValue;
+  bool _updateCheckEnabled = true;
   List<String> _dnsTypes = [];
   final List<String> _availableTypes = [
     'A',
@@ -50,6 +52,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final types = await LocalStorage.getDnsTypes();
     final themeMode = await LocalStorage.getThemeMode();
     final language = await LocalStorage.getLanguage();
+    final updateCheckEnabled = await LocalStorage.getUpdateCheckEnabled();
+    if (!mounted) return;
     if (token != null) {
       _tokenController.text = token;
     }
@@ -57,7 +61,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _dnsTypes = types;
       _themeMode = themeMode;
       _language = language;
+      _updateCheckEnabled = updateCheckEnabled;
     });
+  }
+
+  Future<void> _saveUpdateCheckEnabled(bool value) async {
+    await LocalStorage.saveUpdateCheckEnabled(value);
+    if (mounted) setState(() => _updateCheckEnabled = value);
   }
 
   Future<void> _saveLanguage(String value) async {
@@ -282,6 +292,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ],
               onChanged: (value) { if (value != null) _saveLanguage(value); },
             ),
+            if (UpdateChecker.supportsCurrentPlatform) ...[
+              const SizedBox(height: 32),
+              const Divider(),
+              const SizedBox(height: 16),
+              Text(context.l10n.text('updates'),
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                secondary: const Icon(Icons.system_update),
+                title: Text(context.l10n.text('checkForUpdates')),
+                subtitle: Text(context.l10n.text('checkForUpdatesDescription')),
+                value: _updateCheckEnabled,
+                activeColor: AppColors.primary,
+                onChanged: _saveUpdateCheckEnabled,
+              ),
+            ],
             const SizedBox(height: 32),
             const Divider(),
             const SizedBox(height: 16),

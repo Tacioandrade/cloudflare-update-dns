@@ -4,6 +4,10 @@ GitHub 上的项目：[https://github.com/Tacioandrade/cloudflare-update-dns/](h
 
 本项目的所有重要变更都将记录在此文件中。
 
+## [2.0.2] - 2026-07-20
+### 新增
+- 新增在 Linux 和 Windows 上启动应用时通过 GitHub Releases 每日检查新版本的功能，并可在“设置”中将其关闭。
+
 ## [2.0.1] - 2026-07-19
 ### 新增
 - 在记录页面中新增可组合的 DNS 记录类型和代理状态筛选器，并使用“设置”中启用的记录类型。

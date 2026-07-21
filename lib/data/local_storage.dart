@@ -13,6 +13,8 @@ class LocalStorage {
   static const String _keyDnsTypes = 'dns_types';
   static const String _keyThemeMode = 'theme_mode';
   static const String _keyLanguage = 'language';
+  static const String _keyUpdateCheckEnabled = 'update_check_enabled';
+  static const String _keyLastUpdateCheckDate = 'last_update_check_date';
   static const FlutterSecureStorage _secureStorage = FlutterSecureStorage();
   static const String _passwordHashAlgorithm = 'pbkdf2_sha256';
   static const int _passwordHashIterations = 210000;
@@ -92,6 +94,26 @@ class LocalStorage {
   static Future<void> saveLanguage(String language) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_keyLanguage, language);
+  }
+
+  static Future<bool> getUpdateCheckEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_keyUpdateCheckEnabled) ?? true;
+  }
+
+  static Future<void> saveUpdateCheckEnabled(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keyUpdateCheckEnabled, enabled);
+  }
+
+  static Future<String?> getLastUpdateCheckDate() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_keyLastUpdateCheckDate);
+  }
+
+  static Future<void> saveLastUpdateCheckDate(String date) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyLastUpdateCheckDate, date);
   }
 
   static String _hashPassword(String password) {

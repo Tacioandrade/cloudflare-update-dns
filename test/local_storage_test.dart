@@ -50,4 +50,20 @@ void main() {
 
     expect(await LocalStorage.getLanguage(), 'ja');
   });
+
+  test('update check is enabled by default and can be disabled', () async {
+    expect(await LocalStorage.getUpdateCheckEnabled(), isTrue);
+
+    await LocalStorage.saveUpdateCheckEnabled(false);
+
+    expect(await LocalStorage.getUpdateCheckEnabled(), isFalse);
+  });
+
+  test('last update check date is stored in shared preferences', () async {
+    expect(await LocalStorage.getLastUpdateCheckDate(), isNull);
+
+    await LocalStorage.saveLastUpdateCheckDate('2026-07-20');
+
+    expect(await LocalStorage.getLastUpdateCheckDate(), '2026-07-20');
+  });
 }

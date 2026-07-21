@@ -7,6 +7,7 @@ import 'l10n/app_localizations.dart';
 import 'screens/login_screen.dart';
 import 'screens/domains_screen.dart';
 import 'screens/password_setup_screen.dart';
+import 'widgets/startup_update_check.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -38,36 +39,39 @@ class CloudflareDnsApp extends StatelessWidget {
       builder: (context, themeMode, _) => ValueListenableBuilder<Locale?>(
         valueListenable: AppLanguageController.locale,
         builder: (context, locale, _) {
-        return MaterialApp(
-          debugShowCheckedModeBanner: false,
-          title: 'Cloudflare DNS Manager',
-          locale: locale,
-          localeResolutionCallback: (deviceLocale, supportedLocales) {
-            if (deviceLocale != null) {
-              for (final supportedLocale in supportedLocales) {
-                if (supportedLocale.languageCode == deviceLocale.languageCode) {
-                  return supportedLocale;
+          return MaterialApp(
+            debugShowCheckedModeBanner: false,
+            title: 'Cloudflare DNS Manager',
+            locale: locale,
+            localeResolutionCallback: (deviceLocale, supportedLocales) {
+              if (deviceLocale != null) {
+                for (final supportedLocale in supportedLocales) {
+                  if (supportedLocale.languageCode ==
+                      deviceLocale.languageCode) {
+                    return supportedLocale;
+                  }
                 }
               }
-            }
-            return const Locale('en');
-          },
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          supportedLocales: AppLocalizations.supportedLocales,
-          theme: AppThemeController.lightTheme,
-          darkTheme: AppThemeController.darkTheme,
-          themeMode: themeMode,
-          home: !hasPassword
-              ? const PasswordSetupScreen()
-              : isAuth
-                  ? const DomainsScreen()
-                  : const LoginScreen(),
-        );
+              return const Locale('en');
+            },
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: AppLocalizations.supportedLocales,
+            theme: AppThemeController.lightTheme,
+            darkTheme: AppThemeController.darkTheme,
+            themeMode: themeMode,
+            home: StartupUpdateCheck(
+              child: !hasPassword
+                  ? const PasswordSetupScreen()
+                  : isAuth
+                      ? const DomainsScreen()
+                      : const LoginScreen(),
+            ),
+          );
         },
       ),
     );

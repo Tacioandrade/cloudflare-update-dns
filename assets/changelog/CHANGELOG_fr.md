@@ -4,6 +4,10 @@ Projet sur GitHub : [https://github.com/Tacioandrade/cloudflare-update-dns/](htt
 
 Toutes les modifications notables de ce projet seront documentées dans ce fichier.
 
+## [2.0.2] - 2026-07-20
+### Ajouté
+- Ajout d’une vérification quotidienne des nouvelles versions via GitHub Releases au démarrage de l’application sous Linux et Windows, avec une option pour la désactiver dans les Paramètres.
+
 ## [2.0.1] - 2026-07-19
 ### Ajouté
 - Ajout de filtres combinables par type d’enregistrement DNS et état du proxy dans l’écran des enregistrements, à partir des types activés dans les Paramètres.
